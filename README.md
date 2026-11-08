@@ -19,23 +19,30 @@
 
 웹 소스의 기준은 `plucky775-oss/nib` 커밋 `f2877ec723b56089d19a94c30bb5d0ad92a278d4`입니다. 캘린더·요리·웹 전용 서버 연결 변경은 제외했습니다.
 
-## 빌드와 서명 상태
+## 별도 설치판 207.1
 
-원래 APK에 사용한 서명키가 없어 **설치용 APK는 아직 완성되지 않았습니다**. 이 저장소에는 키나 APK가 없습니다. 원래 키와 같은 인증서로 서명해야 기존 설치본을 업데이트할 수 있습니다.
+새 패키지 `kr.kepconote.standalone.v207`, 표시 이름 **KEPCO 노트 독립판**으로 서명한 APK를 생성했습니다. 기존 v100/v122 앱과 함께 설치할 수 있도록 앱 ID, 자체 권한과 provider 식별자를 분리했습니다. Activity 클래스와 네이티브 DEX는 유지합니다.
 
-이 저장소는 변경된 `assets/www` 파일과 원본 APK를 재구성하는 스크립트를 담고 있습니다. 네이티브 Android Java/Kotlin 소스를 복구한 프로젝트는 아닙니다. 원본 APK는 별도로 준비해야 합니다.
+Android SDK Build Tools 35의 v2·v3 서명 검증, ZIP 정렬 검사, aapt2 패키지 분석을 통과했습니다. 실제 기기 설치·터치 검증은 아직 수행하지 않았습니다. 세부 결과는 `releases/207/release-info.json`과 설치 안내를 참고하세요.
 
-Python 3로 서명 전 APK를 생성합니다.
+원래 107 업데이트는 기존 키가 없어 미서명 상태이며, 207은 새 키를 사용하는 별도 앱입니다. 기존 앱의 데이터를 자동으로 가져오지 않습니다. 기존 앱을 보관하고 노트·다이어리 백업으로 옮기세요.
+
+Google 캘린더는 새 패키지와 SHA-1로 기존 Google Cloud 프로젝트에 **추가 Android OAuth 클라이언트**를 등록해야 합니다. 기존 등록을 삭제하지 마세요. 설정값은 `releases/207/KEPCO-note-207-install-guide.txt`에 있습니다. Google 등록과 기기 로그인 검증은 아직 완료되지 않았습니다.
+
+### 재생성
+
+원본 APK에서 107 수정본을 만든 뒤, 별도 설치용 패키지로 변환합니다. Node.js/Python 검증 절차는 아래와 같습니다.
 
 ```sh
 python build_update.py 'kepco-note-v100-standalone(6).apk'
+python build_parallel_apk.py KEPCO-note-107-UNSIGNED.apk KEPCO-note-207-UNALIGNED.apk
+zipalign -P 16 -f 4 KEPCO-note-207-UNALIGNED.apk KEPCO-note-207-ALIGNED.apk
+apksigner sign --ks /private/path/kepco-note-v207.jks --ks-key-alias kepco-note-v207 --out KEPCO-note-207.apk KEPCO-note-207-ALIGNED.apk
+apksigner verify --verbose --print-certs KEPCO-note-207.apk
+zipalign -c -P 16 4 KEPCO-note-207.apk
 ```
 
-Android SDK Build Tools의 `zipalign`과 `apksigner`, 원래 `.jks` 또는 `.keystore` 파일로 서명합니다. 비밀번호는 로컬 입력 프롬프트에서 입력하며 코드에 저장하지 않습니다. 원래 인증서와 다르면 설치용 출력은 생성하지 않습니다.
-
-```sh
-python sign_update.py --keystore /path/to/original.jks --alias original-alias
-```
+향후 업데이트에는 생성된 **207 전용 서명키를 계속 사용**해야 합니다. 키와 비밀번호는 별도의 개인 보관용 백업으로 제공했으며, 이 공개 저장소에는 포함하지 않습니다. 위 명령은 비밀번호를 대화형으로 입력합니다. 207 APK의 인증서 SHA-256은 `8e3f7bf8d831c60cff0d35110288196bd878c6e078a680ed9b8a5128c8135fad`입니다.
 
 ## 검증
 

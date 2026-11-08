@@ -1,0 +1,18 @@
+{
+  "app_name": "KEPCO 노트 독립판",
+  "package_name": "kr.kepconote.standalone.v207",
+  "version_name": "207.1",
+  "version_code": 207001,
+  "certificate_sha1": "FD:AD:80:32:19:B9:A9:D6:B6:76:F9:5A:17:F9:CB:5E:5E:45:FA:03",
+  "certificate_sha256": "8E:3F:7B:F8:D8:31:C6:0C:FF:0D:35:11:02:88:19:6B:D8:78:C6:E0:78:A6:80:ED:9B:8A:51:28:C8:13:5F:AD",
+  "google_cloud_registration_completed": false,
+  "device_install_tested": false,
+  "apk_sha256": "0e9485c511aaf278bca761f8ed3285f2975f082c35cb4ccddb4407b10659be72",
+  "apk_bytes": 17741305,
+  "signature_v2_verified": true,
+  "signature_v3_verified": true,
+  "zip_alignment_verified": true,
+  "calendar_files_unchanged": 12,
+  "native_dex_unchanged": true,
+  "functional_code_tests_passed": 278
+}

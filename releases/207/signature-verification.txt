@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=KEPCO Note Independent 207
+Signer #1 certificate SHA-256 digest: 8e3f7bf8d831c60cff0d35110288196bd878c6e078a680ed9b8a5128c8135fad
+Signer #1 certificate SHA-1 digest: fdad803219b9a9d6b676f95a17f9cb5e5e45fa03
+Signer #1 certificate MD5 digest: 59b89bd1a0d22b7812094e92bbb4fca9
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 3072
+Signer #1 public key SHA-256 digest: 5d1030ae8e2cda53455dd7d778a8b8b2972c880760d35ad6bef127f63cc1cb34
+Signer #1 public key SHA-1 digest: 1da28fdc861b613f701ffa737e01ef435bc8678c
+Signer #1 public key MD5 digest: 66064a1e1280d9a830594e0d5d232674
