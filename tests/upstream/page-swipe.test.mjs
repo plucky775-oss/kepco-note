@@ -1,0 +1,226 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mountPageSwipe} from '../src/page-swipe.js';
+import {movePaperView} from '../src/paper-viewport.js';
+
+function harness(nativeTouch = true) {
+ const handlers = {}, calls = [], hints = [], state = {page:'a', allowed:true, blank:true, previous:null, next:'add', before:0, revision:0, rect:{left:0,top:0,width:500,height:500}, view:{scale:1,x:0,y:0}};
+ const canvas = {contains:t=>t?.parent===canvas}, surface = {contains:t=>t===canvas||t?.parent===canvas,getBoundingClientRect:()=>({...state.rect})};
+ const root = {hidden:false,addEventListener:(n,f)=>handlers[n]=f,removeEventListener:n=>delete handlers[n]};
+ const viewport = {hasHorizontalOverflow:()=>(state.paperWidth??500)*state.view.scale>500+1,revision:()=>state.revision,begin:center=>({view:{...state.view},center}),move(start,center,ratio){state.view=movePaperView(start.view,start.center,center,ratio,{width:500,height:500,paperWidth:state.paperWidth??500,paperHeight:1000});return true;}};
+ let ui; ui=mountPageSwipe({canvas,surface,root,nativeTouch,viewport,getPageId:()=>state.page,canStart:()=>state.allowed,canSwipe:()=>state.blank,canPan:()=>state.pan??state.blank,getAction:direction=>direction>0?state.previous:state.next,beforeStart(){state.before++;ui.cancel()},navigate(action){calls.push(action);return state.result},onProgress:s=>hints.push(s)});
+ const touch=(id,x,y=200,extra={})=>({identifier:id,clientX:x,clientY:y,target:canvas,...extra});
+ const send=(type,touches,changedTouches=touches)=>{const e={touches,changedTouches,cancelable:true,preventDefault(){this.prevented=true}};handlers[type]?.(e);return e};
+ const pointer=(type,id,x,y=200,extra={})=>{const e={pointerId:id,pointerType:'touch',target:canvas,clientX:x,clientY:y,cancelable:true,preventDefault(){this.prevented=true},stopImmediatePropagation(){this.stopped=true},...extra};handlers[type]?.(e);return e};
+ const swipe=(dx=-180,dy=0)=>{send('touchstart',[touch(1,300)]);send('touchmove',[touch(1,300+dx,200+dy)]);send('touchend',[],[touch(1,300+dx,200+dy)]);};
+ return {ui,state,root,handlers,canvas,surface,calls,hints,touch,send,pointer,swipe};
+}
+const settle=async()=>{for(let i=0;i<8;i++)await Promise.resolve()};
+
+test('long one-finger left drag adds once on release without moving the paper',()=>{
+ const h=harness(),before={...h.state.view};h.send('touchstart',[h.touch(1,300)]);assert.equal(h.send('touchmove',[h.touch(1,120)]).prevented,true);assert.deepEqual(h.calls,[]);assert.equal(h.hints.at(-1).ready,true);assert.deepEqual(h.state.view,before);
+ h.send('touchend',[],[h.touch(1,120)]);h.send('touchend',[],[h.touch(1,120)]);assert.deepEqual(h.calls,['add']);assert.equal(h.hints.at(-1),null);
+});
+test('taps, short horizontal, first-page rightward and diagonal drags neither add nor pan',()=>{
+ for(const [x,y] of [[0,0],[-139,0],[200,0],[-180,120]]){const h=harness();h.swipe(x,y);assert.deepEqual(h.calls,[]);assert.deepEqual(h.state.view,{scale:1,x:0,y:0});}
+});
+test('one finger pans only vertically and retains its position after release',()=>{
+ const h=harness();h.swipe(5,-150);assert.deepEqual(h.state.view,{scale:1,x:0,y:-150});h.swipe(-5,50);assert.deepEqual(h.state.view,{scale:1,x:0,y:-100});assert.deepEqual(h.calls,[]);assert.equal(h.hints.at(-1),null);
+});
+test('overwide steep one-finger pan preserves zoom and follows both offsets',()=>{const h=harness();h.state.view={scale:2,x:-180,y:-300};h.swipe(20,-120);assert.deepEqual(h.state.view,{scale:2,x:-160,y:-420});assert.deepEqual(h.calls,[]);});
+test('vertical pan clamps at both paper edges and does not turn pages',()=>{const h=harness();h.state.previous='previous';h.swipe(0,200);assert.equal(h.state.view.y,0);h.swipe(0,-2000);assert.equal(h.state.view.y,-500);h.swipe(0,-200);assert.equal(h.state.view.y,-500);h.swipe(0,2000);assert.equal(h.state.view.y,0);assert.deepEqual(h.calls,[]);});
+test('paper that fits stays fixed during vertical drag without creating pages',()=>{const h=harness();h.state.view={scale:.5,x:125,y:0};h.swipe(0,-200);assert.deepEqual(h.state.view,{scale:.5,x:125,y:0});assert.deepEqual(h.calls,[]);});
+test('vertical direction stays locked even if the finger later travels horizontally',()=>{
+ const h=harness();h.send('touchstart',[h.touch(1,300,350)]);h.send('touchmove',[h.touch(1,300,320)]);h.send('touchmove',[h.touch(1,50,300)]);h.send('touchend',[],[h.touch(1,50,300)]);assert.equal(h.state.view.y,-50);assert.equal(h.state.view.x,0);assert.deepEqual(h.calls,[]);
+});
+test('horizontal gesture cannot change into scrolling halfway through',()=>{const h=harness();h.send('touchstart',[h.touch(1,300,350)]);h.send('touchmove',[h.touch(1,270,350)]);h.send('touchend',[],[h.touch(1,270,100)]);assert.deepEqual(h.state.view,{scale:1,x:0,y:0});assert.deepEqual(h.calls,[]);});
+test('pan-only contacts may scroll but never navigate horizontally',()=>{const h=harness();h.state.blank=false;h.state.pan=true;h.swipe(0,-100);assert.equal(h.state.view.y,-100);h.swipe(-200);assert.deepEqual(h.calls,[]);});
+test('one-finger scrolling can become a pinch without jumping or promoting a remaining finger',()=>{
+ const h=harness();h.send('touchstart',[h.touch(1,200,300)]);h.send('touchmove',[h.touch(1,200,200)]);assert.equal(h.state.view.y,-100);h.send('touchstart',[h.touch(1,200,200),h.touch(2,300,200)]);h.send('touchmove',[h.touch(1,200,200),h.touch(2,300,200)]);assert.equal(h.state.view.y,-100);h.send('touchmove',[h.touch(1,150,200),h.touch(2,350,200)]);assert.equal(h.state.view.scale,2);const after={...h.state.view};h.send('touchend',[h.touch(1,150,200)],[h.touch(2,350,200)]);h.send('touchmove',[h.touch(1,150,100)]);h.send('touchend',[],[h.touch(1,150,100)]);assert.deepEqual(h.state.view,after);assert.deepEqual(h.calls,[]);
+});
+test('pointer-only vertical pan releases cleanly and cancellation stops further movement',()=>{
+ const h=harness(false);h.pointer('pointerdown',1,200,300);h.pointer('pointermove',1,200,200);assert.equal(h.state.view.y,-100);h.pointer('pointercancel',1,200,200);h.pointer('pointerup',1,200,100);assert.equal(h.state.view.y,-100);h.pointer('pointerdown',2,200,300);h.pointer('pointerup',2,200,250);assert.equal(h.state.view.y,-150);assert.deepEqual(h.calls,[]);
+});
+test('reset, page change, hidden and Pencil interrupt an active one-finger pan',()=>{
+ for(const action of [h=>h.state.revision++,h=>h.state.page='b',h=>{h.root.hidden=true;h.handlers.visibilitychange()},h=>h.pointer('pointerdown',9,200,200,{pointerType:'pen'})]){const h=harness();h.send('touchstart',[h.touch(1,300,300)]);h.send('touchmove',[h.touch(1,300,200)]);action(h);h.send('touchend',[],[h.touch(1,300,100)]);assert.equal(h.state.view.y,-100);assert.deepEqual(h.calls,[]);}
+});
+test('right drag goes back once on release and left drag prefers an existing next page',()=>{
+ for(const [dx,action] of [[180,'previous'],[-180,'next']]){const h=harness();h.state.previous='previous';h.state.next='next';h.send('touchstart',[h.touch(1,250)]);h.send('touchmove',[h.touch(1,250+dx)]);assert.deepEqual(h.calls,[]);assert.equal(h.hints.at(-1).action,action);assert.equal(h.hints.at(-1).ready,true);h.send('touchend',[],[h.touch(1,250+dx)]);h.send('touchend',[],[h.touch(1,250+dx)]);assert.deepEqual(h.calls,[action]);}
+});
+test('returning a right drag below threshold or cancelling never turns the page',()=>{
+ for(const cancel of [false,true]){const h=harness();h.state.previous='previous';h.send('touchstart',[h.touch(1,100)]);h.send('touchmove',[h.touch(1,300)]);if(cancel)h.send('touchcancel',[],[]);h.send('touchend',[],[h.touch(1,cancel?300:120)]);assert.deepEqual(h.calls,[]);}
+});
+test('pending page navigation blocks both directions until it settles',async()=>{
+ const h=harness();h.state.previous='previous';h.state.next='next';let release;h.state.result=new Promise(r=>release=r);h.swipe(180);h.swipe(-180);h.swipe(180);assert.deepEqual(h.calls,['previous']);release();await settle();h.swipe(-180);assert.deepEqual(h.calls,['previous','next']);
+});
+test('pointer-only right drag navigates to the previous page',()=>{const h=harness(false);h.state.previous='previous';h.pointer('pointerdown',1,100);h.pointer('pointerup',1,300);assert.deepEqual(h.calls,['previous']);});
+test('returning below threshold disarms; vertical intent cannot turn into page creation',()=>{
+ for(const vertical of [false,true]){const h=harness();h.send('touchstart',[h.touch(1,300)]);h.send('touchmove',[h.touch(1,vertical?300:100,vertical?300:200)]);h.send('touchmove',[h.touch(1,vertical?100:280)]);h.send('touchend',[],[h.touch(1,vertical?100:280)]);assert.deepEqual(h.calls,[]);}
+});
+test('release coordinate is used even if last move was not delivered',()=>{const h=harness();h.send('touchstart',[h.touch(1,300)]);h.send('touchend',[],[h.touch(1,120)]);assert.deepEqual(h.calls,['add']);});
+test('invalid final pointer and missing final coordinates cannot create a page',()=>{for(const changed of [[],[{identifier:99,clientX:100,clientY:200}]]){const h=harness();h.send('touchstart',[h.touch(1,300)]);h.send('touchmove',[h.touch(1,100)]);h.send('touchend',[],changed);assert.deepEqual(h.calls,[]);}});
+test('content, finger-writing and editing modes opt out of creation and pointer interception',()=>{const h=harness();h.state.blank=false;h.swipe();assert.deepEqual(h.calls,[]);assert.equal(h.pointer('pointermove',1,100).stopped,undefined);});
+test('two fingers pan the paper only; no page is created or navigated',()=>{const h=harness(),start=[h.touch(1,200,300),h.touch(2,300,300)],last=[h.touch(1,200,100),h.touch(2,300,100)];assert.equal(h.send('touchstart',start).prevented,true);h.send('touchmove',last);assert.equal(h.state.view.y,-200);h.send('touchend',[],last);assert.deepEqual(h.calls,[]);assert.equal(h.state.before,1);});
+test('pinch zoom anchors the center and preserves original coordinates; browser event is prevented',()=>{const h=harness();h.send('touchstart',[h.touch(1,200,250),h.touch(2,300,250)]);const e=h.send('touchmove',[h.touch(1,150,250),h.touch(2,350,250)]);assert.equal(e.prevented,true);assert.deepEqual(h.state.view,{scale:2,x:-250,y:-250});assert.deepEqual(h.calls,[]);});
+test('1 -> 2 -> 1 cannot promote the remaining finger to drawing or creation',()=>{const h=harness();h.send('touchstart',[h.touch(1,300)]);h.send('touchstart',[h.touch(1,300),h.touch(2,400)]);h.send('touchend',[h.touch(1,300)],[h.touch(2,400)]);h.send('touchmove',[h.touch(1,50)]);assert.equal(h.pointer('pointermove',1,50).stopped,true);h.send('touchend',[],[h.touch(1,50)]);assert.deepEqual(h.calls,[]);h.swipe();assert.deepEqual(h.calls,['add']);});
+test('third touch cancels until all fingers release',()=>{const h=harness();h.send('touchstart',[h.touch(1,300),h.touch(2,400)]);h.send('touchstart',[h.touch(1,300),h.touch(2,400),h.touch(3,450)]);h.send('touchend',[h.touch(1,300)],[h.touch(2,400),h.touch(3,450)]);h.send('touchend',[],[h.touch(1,50)]);assert.deepEqual(h.calls,[]);h.swipe();assert.deepEqual(h.calls,['add']);});
+test('page switch, resize, viewport reset, hidden, touchcancel and Pencil interrupt cancel creation',()=>{
+ for(const action of [h=>h.state.page='b',h=>h.state.rect.width+=2,h=>h.state.rect.top+=2,h=>h.state.revision++,h=>{h.root.hidden=true;h.handlers.visibilitychange()},h=>h.send('touchcancel',[],[]),h=>h.pointer('pointerdown',9,200,200,{pointerType:'pen'})]){
+ const h=harness();h.send('touchstart',[h.touch(1,300)]);action(h);h.send('touchend',[],[h.touch(1,50)]);assert.deepEqual(h.calls,[]);}
+});
+test('disabled, palm, stylus and outside contacts cannot own a gesture',()=>{
+ for(const extra of [{radiusX:50,radiusY:50},{touchType:'stylus'},{target:{}}]){const h=harness();h.send('touchstart',[h.touch(1,300,200,extra)]);h.send('touchend',[],[h.touch(1,50,200,extra)]);assert.deepEqual(h.calls,[]);assert.equal(h.state.before,0);}
+ const h=harness();h.state.allowed=false;h.swipe();assert.deepEqual(h.calls,[]);
+});
+test('Pencil contact prevents palm pinch from cancelling a live stroke',()=>{const h=harness();h.pointer('pointerdown',9,200,200,{pointerType:'pen'});h.send('touchstart',[h.touch(1,300),h.touch(2,400)]);assert.equal(h.state.before,0);assert.equal(h.ui.hasGesture(),false);h.pointer('pointerup',9,200,200,{pointerType:'pen'});h.send('touchend',[],[h.touch(1,300),h.touch(2,400)]);h.swipe();assert.deepEqual(h.calls,['add']);});
+test('mixed toolbar/paper multi-touch is cancelled without taking over toolbar-only scroll',()=>{const h=harness(),outside=h.touch(2,400,200,{target:{}});assert.equal(h.send('touchstart',[outside]).prevented,undefined);h.send('touchend',[],[outside]);h.send('touchstart',[h.touch(1,300),outside]);assert.equal(h.state.before,0);h.send('touchend',[],[h.touch(1,100),outside]);assert.deepEqual(h.calls,[]);});
+test('busy async save locks page creation, and failure releases without automatic retry',async()=>{const h=harness();let release;h.state.result=new Promise(r=>release=r);h.swipe();h.swipe();assert.deepEqual(h.calls,['add']);release(false);await settle();h.state.result=Promise.reject(Error('disk'));h.swipe();await settle();assert.deepEqual(h.calls,['add','add']);h.state.result=true;h.swipe();await settle();assert.deepEqual(h.calls,['add','add','add']);});
+test('touch stream survives pointercancel; touchcancel cancels it authoritatively',()=>{for(const cancel of [false,true]){const h=harness();h.send('touchstart',[h.touch(1,300)]);h.pointer('pointercancel',1,300);if(cancel)h.send('touchcancel',[],[]);h.send('touchend',[],[h.touch(1,50)]);assert.deepEqual(h.calls,cancel?[]:['add']);}});
+test('pointer-only devices use one pipeline and release creates only once',()=>{const h=harness(false);assert.equal(h.pointer('pointerdown',1,300).stopped,true);h.pointer('pointermove',1,100);h.pointer('pointerup',1,100);h.pointer('pointerup',1,100);assert.deepEqual(h.calls,['add']);});
+test('pointer-only two fingers zoom, block remaining contact, and never add',()=>{const h=harness(false);h.pointer('pointerdown',1,200);h.pointer('pointerdown',2,300);h.pointer('pointermove',1,150);h.pointer('pointermove',2,350);assert.equal(h.state.view.scale,2);h.pointer('pointerup',2,350);assert.equal(h.pointer('pointermove',1,10).stopped,true);h.pointer('pointerup',1,10);assert.deepEqual(h.calls,[]);h.pointer('pointerdown',3,300);h.pointer('pointerup',3,100);assert.deepEqual(h.calls,[]);h.state.view={scale:1,x:0,y:0};h.pointer('pointerdown',4,300);h.pointer('pointerup',4,100);assert.deepEqual(h.calls,['add']);});
+test('pointer-only cancellation cannot commit after lost stream',()=>{const h=harness(false);h.pointer('pointerdown',1,300);h.pointer('pointermove',1,100);h.pointer('pointercancel',1,100);h.pointer('pointerup',1,100);assert.deepEqual(h.calls,[]);});
+test('dispose removes every listener and pending hint',()=>{const h=harness();h.send('touchstart',[h.touch(1,300)]);h.ui.dispose();assert.deepEqual(Object.keys(h.handlers),[]);assert.equal(h.ui.hasGesture(),false);assert.equal(h.hints.at(-1),null);});
+
+test('existing pages accept comfortable short swipes on narrow and wide paper',()=>{
+ for(const width of [320,500,1151])for(const [direction,action] of [[1,'previous'],[-1,'next']]){
+  const h=harness();h.state.rect.width=width;h.state.previous='previous';h.state.next='next';const distance=Math.max(60,Math.min(96,width*.12));
+  h.swipe(direction*(distance-1));assert.deepEqual(h.calls,[]);h.swipe(direction*distance);assert.deepEqual(h.calls,[action]);
+ }
+});
+test('short swipe cannot add on last page; long drag adds exactly once on wide paper',()=>{
+ const h=harness();h.state.rect.width=1151;h.swipe(-96);h.swipe(-219);assert.deepEqual(h.calls,[]);h.swipe(-220);assert.deepEqual(h.calls,['add']);
+});
+test('reversing a gesture recomputes threshold for creation vs existing previous page',()=>{
+ const h=harness();h.state.previous='previous';h.state.rect.width=1151;
+ h.send('touchstart',[h.touch(1,300)]);h.send('touchmove',[h.touch(1,400)]);assert.equal(h.hints.at(-1).ready,true);
+ h.send('touchmove',[h.touch(1,200)]);assert.equal(h.hints.at(-1).action,'add');assert.equal(h.hints.at(-1).ready,false);
+ h.send('touchend',[],[h.touch(1,200)]);assert.deepEqual(h.calls,[]);
+});
+test('short existing-page swipe preserves vertical lock and rejects diagonal intent',()=>{
+ const h=harness();h.state.next='next';h.send('touchstart',[h.touch(1,300,300)]);h.send('touchmove',[h.touch(1,300,280)]);h.send('touchend',[],[h.touch(1,200,260)]);assert.deepEqual(h.calls,[]);
+ const d=harness();d.state.next='next';d.swipe(-90,60);assert.deepEqual(d.calls,[]);
+});
+test('short swipes follow current page indices without jumping or accidental add',async()=>{
+ const h=harness();h.state.page='p1';h.state.next='next';
+ h.swipe(-80);assert.deepEqual(h.calls,['next']);h.state.page='p2';h.state.previous='previous';h.state.next='next';await settle();
+ h.swipe(-80);assert.deepEqual(h.calls,['next','next']);h.state.page='p3';h.state.next='add';await settle();
+ h.swipe(-80);assert.deepEqual(h.calls,['next','next']);h.swipe(80);assert.deepEqual(h.calls,['next','next','previous']);
+});
+test('native and pointer-only short navigation both remain one action on release',()=>{
+ for(const native of [true,false]){const h=harness(native);h.state.next='next';if(native){h.send('touchstart',[h.touch(1,300)]);h.send('touchend',[],[h.touch(1,220)]);h.send('touchend',[],[h.touch(1,220)]);}else{h.pointer('pointerdown',1,300);h.pointer('pointerup',1,220);h.pointer('pointerup',1,220);}assert.deepEqual(h.calls,['next']);}
+});
+for(const native of [true,false])test(`overflow horizontal drags pan both directions and clamp without page turns (${native?'touch':'pointer'})`,()=>{const h=harness(native);h.state.view={scale:2,x:-200,y:-300};h.state.previous='previous';const drag=dx=>{if(native)h.swipe(dx,0);else{h.pointer('pointerdown',1,250,200);h.pointer('pointermove',1,250+dx,200);h.pointer('pointerup',1,250+dx,200);}};drag(-120);assert.equal(h.state.view.x,-320);drag(100);assert.equal(h.state.view.x,-220);drag(-2000);assert.equal(h.state.view.x,-500);drag(-200);assert.equal(h.state.view.x,-500);drag(3000);assert.equal(h.state.view.x,0);drag(200);assert.equal(h.state.view.x,0);assert.equal(h.state.view.y,-300);assert.equal(h.state.view.scale,2);assert.deepEqual(h.calls,[]);assert.equal(h.hints.at(-1),null);});
+test('overflow photo pan-only contacts pan horizontally but edit-blocked contacts cannot navigate',()=>{const h=harness();h.state.view={scale:2,x:-100,y:0};h.state.blank=false;h.state.pan=true;h.swipe(-150,0);assert.equal(h.state.view.x,-250);h.state.pan=false;h.state.blank=true;h.swipe(-200,0);assert.equal(h.state.view.x,-250);assert.deepEqual(h.calls,[]);});
+test('overflow pan follows curves and may promote to pinch but never remaining-finger page turn',()=>{const h=harness();h.state.view={scale:2,x:-100,y:-200};h.send('touchstart',[h.touch(1,300,300)]);h.send('touchmove',[h.touch(1,250,300)]);h.send('touchmove',[h.touch(1,200,100)]);assert.equal(h.state.view.x,-200);assert.equal(h.state.view.y,-400);h.send('touchstart',[h.touch(1,200,100),h.touch(2,300,100)]);h.send('touchmove',[h.touch(1,150,100),h.touch(2,350,100)]);const after={...h.state.view};assert.equal(after.scale,4);h.send('touchend',[h.touch(1,150,100)],[h.touch(2,350,100)]);h.send('touchmove',[h.touch(1,-300,100)]);h.send('touchend',[],[h.touch(1,-300,100)]);assert.deepEqual(h.state.view,after);assert.deepEqual(h.calls,[]);});
+test('Pencil and viewport revision interrupt horizontal overflow pan without page action',()=>{for(const interrupt of [h=>h.pointer('pointerdown',9,200,200,{pointerType:'pen'}),h=>h.state.revision++]){const h=harness();h.state.view={scale:2,x:-100,y:-100};h.send('touchstart',[h.touch(1,300)]);h.send('touchmove',[h.touch(1,250)]);interrupt(h);h.send('touchend',[],[h.touch(1,0)]);assert.equal(h.state.view.x,-150);assert.deepEqual(h.calls,[]);}});
+
+for(const native of [true,false])test(`nominal1x overwide paper pans instead of turning (${native?'touch':'pointer'})`,()=>{const h=harness(native);h.state.paperWidth=750;h.state.previous='previous';const drag=dx=>{if(native)h.swipe(dx,0);else{h.pointer('pointerdown',1,300,200);h.pointer('pointerup',1,300+dx,200);}};drag(-150);assert.equal(h.state.view.x,-150);drag(-500);assert.equal(h.state.view.x,-250);drag(500);assert.equal(h.state.view.x,0);assert.equal(h.state.view.scale,1);assert.deepEqual(h.calls,[]);});
+
+function freePanHarness(native) {
+ const h=harness(native); h.state.view={scale:2,x:-200,y:-600}; h.state.previous='previous';
+ const event=(phase,x,y)=>native
+  ? h.send(`touch${phase}`,phase==='end'?[]:[h.touch(1,x,y)],[h.touch(1,x,y)])
+  : h.pointer(`pointer${{start:'down',move:'move',end:'up'}[phase]}`,1,x,y);
+ return {...h,event};
+}
+for(const native of [true,false]) {
+ const mode=native?'touch':'pointer';
+ test(`overflow diagonal45, shallow and steep pan moves both axes (${mode})`,()=>{
+  for(const [dx,dy] of [[-80,-80],[80,80],[-120,-20],[20,-120],[-20,120],[120,20]]) {
+   const h=freePanHarness(native);h.event('start',250,250);h.event('move',250+dx,250+dy);
+   assert.deepEqual(h.state.view,{scale:2,x:-200+dx,y:-600+dy});
+   h.event('end',250+dx,250+dy);assert.deepEqual(h.calls,[]);assert.equal(h.hints.at(-1),null);
+  }
+ });
+ test(`overflow radial threshold latches through curves, reversal and return to origin (${mode})`,()=>{
+  const h=freePanHarness(native);h.event('start',250,250);h.event('move',256,256);
+  assert.deepEqual(h.state.view,{scale:2,x:-200,y:-600});
+  for(const [dx,dy] of [[6,8],[80,0],[80,-100],[-60,-100],[-60,90],[2,3],[0,0]]) {
+   h.event('move',250+dx,250+dy);assert.deepEqual(h.state.view,{scale:2,x:-200+dx,y:-600+dy});
+  }
+  h.event('end',250,250);assert.deepEqual(h.calls,[]);
+ });
+ test(`overflow diagonal bounds never promote edge or reversal to page navigation (${mode})`,()=>{
+  const h=freePanHarness(native);h.event('start',250,250);
+  for(const [dx,dy,x,y] of [[-2000,-3000,-500,-1500],[-2200,-3500,-500,-1500],[2000,3000,0,0],[2200,3500,0,0],[-50,60,-250,-540]]) {
+   h.event('move',250+dx,250+dy);assert.deepEqual(h.state.view,{scale:2,x,y});
+  }
+  h.event('end',200,310);assert.deepEqual(h.calls,[]);
+ });
+ test(`overflow free pan interruption preserves last view and never navigates (${mode})`,()=>{
+  for(const interrupt of [h=>h.state.revision++,h=>h.state.page='b',h=>h.state.allowed=false,h=>h.state.rect.width+=2,h=>{h.root.hidden=true;h.handlers.visibilitychange()},h=>h.pointer('pointerdown',9,100,100,{pointerType:'pen'}),h=>native?h.send('touchcancel',[],[]):h.pointer('pointercancel',1,200,180)]) {
+   const h=freePanHarness(native);h.event('start',250,250);h.event('move',200,180);const saved={...h.state.view};
+   interrupt(h);h.event('move',100,100);h.event('end',50,50);assert.deepEqual(h.state.view,saved);assert.deepEqual(h.calls,[]);
+  }
+ });
+ test(`overflow diagonal promotes to pinch without jump and blocks remaining finger (${mode})`,()=>{
+  const h=freePanHarness(native);h.event('start',250,250);h.event('move',200,180);const before={...h.state.view};
+  if(native){h.send('touchstart',[h.touch(1,200,180),h.touch(2,300,180)]);h.send('touchmove',[h.touch(1,200,180),h.touch(2,300,180)]);}
+  else{h.pointer('pointerdown',2,300,180);h.pointer('pointermove',2,300,180);}
+  assert.deepEqual(h.state.view,before);
+  if(native){h.send('touchmove',[h.touch(1,150,180),h.touch(2,350,180)]);h.send('touchend',[h.touch(1,150,180)],[h.touch(2,350,180)]);}
+  else{h.pointer('pointermove',1,150,180);h.pointer('pointermove',2,350,180);h.pointer('pointerup',2,350,180);}
+  const after={...h.state.view};assert.equal(after.scale,4);h.event('move',0,0);h.event('end',0,0);assert.deepEqual(h.state.view,after);assert.deepEqual(h.calls,[]);
+ });
+}
+
+for(const native of [true,false])test(`finger ink mode disables single-finger navigation but preserves pinch (${native?'touch':'pointer'})`,()=>{const h=harness(native);h.state.blank=false;h.state.pan=false;if(native){h.send('touchstart',[h.touch(1,200)]);h.send('touchmove',[h.touch(1,80)]);assert.equal(h.ui.hasGesture(),false);h.send('touchstart',[h.touch(1,200),h.touch(2,300)]);h.send('touchmove',[h.touch(1,150),h.touch(2,350)]);h.send('touchend',[h.touch(1,150)],[h.touch(2,350)]);h.send('touchend',[],[h.touch(1,150)]);}else{assert.notEqual(h.pointer('pointerdown',1,200).stopped,true);h.pointer('pointermove',1,80);h.pointer('pointerdown',2,300);h.pointer('pointermove',1,-140);h.pointer('pointerup',2,300);h.pointer('pointerup',1,-140);}assert.equal(h.state.before,1);assert.equal(h.state.view.scale,2);assert.deepEqual(h.calls,[]);});
+test('invalid multi-finger contact discards an unfinished finger stroke before blocking',()=>{for(const fingers of [[1,2,3],[1,2]]){const h=harness();h.state.blank=false;h.state.pan=false;h.send('touchstart',[h.touch(1,200)]);h.send('touchstart',fingers.map((id,i)=>h.touch(id,200+i*2)));assert.equal(h.state.before,1);assert.equal(h.ui.hasGesture(),false);h.send('touchend',[],fingers.map(id=>h.touch(id,200)));assert.deepEqual(h.calls,[]);}});
+
+// Ownership lifecycle regressions: cancellation never promotes a still-held
+// finger, and only the authoritative input stream may release the sequence.
+test('explicit cancellation retains ownership until the last native contact releases',()=>{
+ const h=harness();h.send('touchstart',[h.touch(1,300)]);h.ui.cancel();h.ui.cancel();
+ assert.equal(h.ui.hasGesture(),false);assert.equal(h.ui.blocksNativeScroll(),true);
+ h.send('touchstart',[h.touch(1,300),h.touch(2,400)]);
+ assert.equal(h.ui.hasGesture(),false);assert.equal(h.state.before,0);
+ h.send('touchend',[h.touch(1,300)],[h.touch(2,400)]);
+ assert.equal(h.ui.blocksNativeScroll(),true);
+ h.send('touchend',[],[h.touch(1,50)]);assert.equal(h.ui.blocksNativeScroll(),false);assert.deepEqual(h.calls,[]);
+ h.swipe();assert.deepEqual(h.calls,['add']);
+});
+test('cancel while idle does not steal the next finger-writing contact',()=>{
+ const h=harness();h.state.blank=false;h.ui.cancel();
+ assert.equal(h.ui.blocksNativeScroll(),false);
+ h.send('touchstart',[h.touch(1,300)]);
+ assert.equal(h.pointer('pointerdown',1,300).stopped,undefined);
+ assert.equal(h.pointer('pointermove',1,280).stopped,undefined);
+});
+test('native pinch ignores paired pointercancel and pointerup until touchend',()=>{
+ const h=harness();h.send('touchstart',[h.touch(1,200),h.touch(2,300)]);
+ h.pointer('pointercancel',1,200);h.pointer('pointerup',2,300);
+ assert.equal(h.ui.hasGesture(),true);assert.equal(h.ui.blocksNativeScroll(),true);
+ h.send('touchmove',[h.touch(1,150),h.touch(2,350)]);assert.equal(h.state.view.scale,2);
+ h.send('touchend',[],[h.touch(1,150),h.touch(2,350)]);
+ assert.equal(h.ui.hasGesture(),false);assert.equal(h.ui.blocksNativeScroll(),false);
+});
+test('native touchcancel with a remaining contact blocks until full release',()=>{
+ const h=harness();h.send('touchstart',[h.touch(1,200),h.touch(2,300)]);
+ h.send('touchcancel',[h.touch(1,200)],[h.touch(2,300)]);
+ assert.equal(h.ui.hasGesture(),false);assert.equal(h.ui.blocksNativeScroll(),true);
+ h.pointer('pointercancel',1,200);assert.equal(h.ui.blocksNativeScroll(),true);
+ h.send('touchend',[],[h.touch(1,200)]);assert.equal(h.ui.blocksNativeScroll(),false);
+});
+test('untracked pointer cancellation cannot revoke an active pointer-only owner',()=>{
+ const h=harness(false);h.pointer('pointerdown',1,300);
+ h.pointer('pointercancel',99,300);assert.equal(h.ui.hasGesture(),true);
+ h.pointer('pointerup',1,100);assert.deepEqual(h.calls,['add']);
+});
+test('pointer-only pinch cancellation blocks the remaining finger and then recovers',()=>{
+ const h=harness(false);h.pointer('pointerdown',1,200);h.pointer('pointerdown',2,300);
+ h.pointer('pointercancel',2,300);assert.equal(h.ui.hasGesture(),false);assert.equal(h.ui.blocksNativeScroll(),true);
+ assert.equal(h.pointer('pointermove',1,50).stopped,true);h.pointer('pointerup',1,50);
+ assert.equal(h.ui.blocksNativeScroll(),false);assert.deepEqual(h.calls,[]);
+ h.pointer('pointerdown',3,300);h.pointer('pointerup',3,100);assert.deepEqual(h.calls,['add']);
+});
+test('dispose releases both active and blocked ownership and is repeatable',()=>{
+ for(const cancelFirst of [false,true]){const h=harness(false);h.pointer('pointerdown',1,300);if(cancelFirst)h.ui.cancel();
+ h.ui.dispose();h.ui.dispose();assert.equal(h.ui.hasGesture(),false);assert.equal(h.ui.blocksNativeScroll(),false);
+ assert.deepEqual(Object.keys(h.handlers),[]);assert.deepEqual(h.calls,[]);}
+});
+test('hiding releases cancelled ownership and stale releases cannot navigate after resume',()=>{
+ const h=harness(false);h.pointer('pointerdown',1,300);h.ui.cancel();h.root.hidden=true;h.handlers.visibilitychange();
+ assert.equal(h.ui.blocksNativeScroll(),false);h.root.hidden=false;h.pointer('pointerup',1,100);assert.deepEqual(h.calls,[]);
+ h.pointer('pointerdown',2,300);h.pointer('pointerup',2,100);assert.deepEqual(h.calls,['add']);
+});
+

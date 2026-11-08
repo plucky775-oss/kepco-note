@@ -1,0 +1,81 @@
+명화 표지 출처 / Masterpiece cover credits
+
+The Metropolitan Museum of Art, New York.
+Official metadata marks all twelve works isPublicDomain=true. Images are available under CC0 1.0 through the museum Open Access program.
+Policy: https://www.metmuseum.org/hubs/open-access
+CC0: https://creativecommons.org/publicdomain/zero/1.0/
+
+Each original is scaled proportionally without cropping or recoloring, and placed inside an ivory frame. No AI repainting. User notebook titles are rendered separately.
+
+고흐 · 사이프러스가 있는 밀밭
+Vincent van Gogh — Wheat Field with Cypresses (1889)
+Collection: https://www.metmuseum.org/art/collection/search/436535
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/436535
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP-42549-001.jpg
+
+고흐 · 해바라기
+Vincent van Gogh — Sunflowers (1887)
+Collection: https://www.metmuseum.org/art/collection/search/436524
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/436524
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP-41223-001.jpg
+
+마네 · 정원의 모네 가족
+Edouard Manet — The Monet Family in Their Garden at Argenteuil (1874)
+Collection: https://www.metmuseum.org/art/collection/search/436965
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/436965
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP-25465-001.jpg
+
+르누아르 · 바닷가에서
+Auguste Renoir — By the Seashore (1883)
+Collection: https://www.metmuseum.org/art/collection/search/437430
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/437430
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP-14936-039.jpg
+
+드가 · 꽃병 옆의 여인
+Edgar Degas — A Woman Seated beside a Vase of Flowers (Madame Paul Valpinçon?) (1865)
+Collection: https://www.metmuseum.org/art/collection/search/436121
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/436121
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP-25460-001.jpg
+
+다비드 · 소크라테스의 죽음
+Jacques Louis David — The Death of Socrates (1787)
+Collection: https://www.metmuseum.org/art/collection/search/436105
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/436105
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP-13139-001.jpg
+
+베르메르 · 물주전자를 든 여인
+Johannes Vermeer — Young Woman with a Water Pitcher (ca. 1662)
+Collection: https://www.metmuseum.org/art/collection/search/437881
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/437881
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP353257.jpg
+
+세잔 · 카드놀이하는 사람들
+Paul Cézanne — The Card Players (1890–92)
+Collection: https://www.metmuseum.org/art/collection/search/435868
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/435868
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP231550.jpg
+
+쇠라 · 서커스의 객몰이
+Georges Seurat — Circus Sideshow (Parade de cirque) (1887–88)
+Collection: https://www.metmuseum.org/art/collection/search/437654
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/437654
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP375450_cropped.jpg
+
+터너 · 베네치아
+Joseph Mallord William Turner — Venice, from the Porch of Madonna della Salute (ca. 1835)
+Collection: https://www.metmuseum.org/art/collection/search/437853
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/437853
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP169568.jpg
+
+로이체 · 워싱턴의 델라웨어강 도하
+Emanuel Leutze — Washington Crossing the Delaware (1851)
+Collection: https://www.metmuseum.org/art/collection/search/11417
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/11417
+Image: https://images.metmuseum.org/CRDImages/ad/original/DP215410.jpg
+
+라비유기아르 · 두 제자와 자화상
+Adélaïde Labille-Guiard — Self-Portrait with Two Pupils, Marie Gabrielle Capet (1761–1818) and Marie Marguerite Carraux de Rosemond (1765–1788) (1785)
+Collection: https://www.metmuseum.org/art/collection/search/436840
+Metadata: https://collectionapi.metmuseum.org/public/collection/v1/objects/436840
+Image: https://images.metmuseum.org/CRDImages/ep/original/DP320103.jpg
+

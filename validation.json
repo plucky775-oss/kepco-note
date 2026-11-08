@@ -1,0 +1,421 @@
+{
+  "base_apk": "kepco-note-v100-standalone(6).apk",
+  "base_sha256": "d132e22dd8d41700df7b499e2f92231bcc9594f18eca4a4afa814a82930880f6",
+  "package": "kr.kepconote.standalone.v100",
+  "version_code": 107001,
+  "version_name": "107.1",
+  "app_version": "2026.11.09.107",
+  "signer_sha256_required": "62e669b5a969b367815220a49cbb5bc4c93795a72a6e5f43ca8d80619f5cb91c",
+  "cover_count": 55,
+  "changes": [
+    {
+      "path": "assets/www/index.html",
+      "kind": "modified",
+      "sha256": "fc681b6438183c6ad9ee5999b13fdbd91f11bdc595eea5663872dfce689c1e57"
+    },
+    {
+      "path": "assets/www/licenses/masterpiece-covers.txt",
+      "kind": "added",
+      "sha256": "131800b18a77340925e6396b60cfc5cc3d82c6825ca42bd3c782440ca20ab6bc"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-01-thumb.webp",
+      "kind": "added",
+      "sha256": "89bb6b821360bba9940693dce6e0e46d2a8643098f918351f1f6338f9dd2fcb3"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-01.webp",
+      "kind": "added",
+      "sha256": "602eafcb8ce71bc08fa785bab12ca32d2194b5a07ff669716b50c1026c6639e6"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-02-thumb.webp",
+      "kind": "added",
+      "sha256": "4e2f84c2aa49a8cb588af065b6f10b001e7c5393b4ad6fa5df5b36a9e9f814b6"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-02.webp",
+      "kind": "added",
+      "sha256": "083ef1376835f1434eed1780e6955cc05267c1e1dc162385b413b486a67239cb"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-03-thumb.webp",
+      "kind": "added",
+      "sha256": "20e114092fc597b7991138c95e11c0ab01dadfef7394a0d78e5480b6fe308ff0"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-03.webp",
+      "kind": "added",
+      "sha256": "66bd989fb48842e29e435c0cc85751836b732553a50ae56a67ec59e9911f7ede"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-04-thumb.webp",
+      "kind": "added",
+      "sha256": "a1f466d4d248b4aff09075b607e3be86119433d117d894d5f78cdf2d110c1b62"
+    },
+    {
+      "path": "assets/www/notebook-covers/ai-04.webp",
+      "kind": "added",
+      "sha256": "f03e1707126c5dcb7d9e2c38d48db0320a55df5f9d6e85dc1efafeed7e2f99a9"
+    },
+    {
+      "path": "assets/www/notebook-covers/cezanne-card-players-thumb.webp",
+      "kind": "added",
+      "sha256": "e4be2e0fd36c97817bc2203212a25ef1f728a848ab396879e5d4bc888ca7c2e1"
+    },
+    {
+      "path": "assets/www/notebook-covers/cezanne-card-players.webp",
+      "kind": "added",
+      "sha256": "d93611abb040bf5475213b4bc58a4f0f597c89f1bc2339089f33f32f7f920064"
+    },
+    {
+      "path": "assets/www/notebook-covers/david-death-of-socrates-thumb.webp",
+      "kind": "added",
+      "sha256": "58c5b89594a4256f57164e287bc3812832300b35fb0de942b544de25d36bc52f"
+    },
+    {
+      "path": "assets/www/notebook-covers/david-death-of-socrates.webp",
+      "kind": "added",
+      "sha256": "c54e5f7042531306af12c436dacfea96f2571ef0374269b25d91a65182a04c83"
+    },
+    {
+      "path": "assets/www/notebook-covers/degas-vase-of-flowers-thumb.webp",
+      "kind": "added",
+      "sha256": "33df5a271b43231eaf1f4000f0fe44cc14ae41ff6413da8e001c8b327391e395"
+    },
+    {
+      "path": "assets/www/notebook-covers/degas-vase-of-flowers.webp",
+      "kind": "added",
+      "sha256": "f848d70a8c9164b625b22114270140787d44f407cece84fa3f0de3aef1f6efef"
+    },
+    {
+      "path": "assets/www/notebook-covers/labille-guiard-self-portrait-thumb.webp",
+      "kind": "added",
+      "sha256": "0c8b232a8413845cd3941c4e5993c60c4bc84e8a30fe1182ced744a2c56fb3c9"
+    },
+    {
+      "path": "assets/www/notebook-covers/labille-guiard-self-portrait.webp",
+      "kind": "added",
+      "sha256": "ed901a6727ad94260d014f6a510e9c3ac20078e42d76a6d63cbad30934cbba59"
+    },
+    {
+      "path": "assets/www/notebook-covers/leutze-washington-delaware-thumb.webp",
+      "kind": "added",
+      "sha256": "a3194c2b872914a1a69a8471ac1d9bdc69eeaf7624dcc4144b936c2138993c21"
+    },
+    {
+      "path": "assets/www/notebook-covers/leutze-washington-delaware.webp",
+      "kind": "added",
+      "sha256": "0fe7eeec25f7ab5019e027845af58aed0ddae909b74ace0ff5ee3ef5ef1d1122"
+    },
+    {
+      "path": "assets/www/notebook-covers/manet-monet-garden-thumb.webp",
+      "kind": "added",
+      "sha256": "28a5b7be16dc53cc89fb80bb90426ef9d8fba4e1a3796f1b650344553184f2f9"
+    },
+    {
+      "path": "assets/www/notebook-covers/manet-monet-garden.webp",
+      "kind": "added",
+      "sha256": "867b4638a7c89d944889a92d4958819a22e08ff75578e8491a7d934d26dbed83"
+    },
+    {
+      "path": "assets/www/notebook-covers/masterpiece-sources.json",
+      "kind": "added",
+      "sha256": "0f26f7aa0b5f7a43e5774cac828e11d27f763584b71c8d3282f47e1b82f22077"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-01-thumb.webp",
+      "kind": "added",
+      "sha256": "a6ceeac9176dc2f9defb551856d4abb61b228ffd7ec6ddf486e34d7798a8feba"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-01.webp",
+      "kind": "added",
+      "sha256": "fec5ad662599df15f175f8590dc488c4f21f43ac19ca71059226fe3d2b527425"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-02-thumb.webp",
+      "kind": "added",
+      "sha256": "354c1fac00f6077fb4930bb9a9e01f2049b062c5d93ea39972afb1301187cf7f"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-02.webp",
+      "kind": "added",
+      "sha256": "f0835845d7f4dd8493ad2c886649fc027cc0cc8352138842ed9a9573ae569bf4"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-03-thumb.webp",
+      "kind": "added",
+      "sha256": "adef75a2e2ee4cbac648441db0917958c74a45ef46fa8c4346cb3728596529e9"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-03.webp",
+      "kind": "added",
+      "sha256": "01f9b896df6851ed3b31902ac9aeb04787e9042729ef203b8ed0cdd0f30a9ce3"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-04-thumb.webp",
+      "kind": "added",
+      "sha256": "25ce844026423090c4bd0026c7d5cde870c93881f645e99ab02a7b23d0baf60e"
+    },
+    {
+      "path": "assets/www/notebook-covers/power-04.webp",
+      "kind": "added",
+      "sha256": "79bc6d0c5da2e90ef088bd807a7778a6d45b0e1265838c18ca666d068964f4c5"
+    },
+    {
+      "path": "assets/www/notebook-covers/renoir-thumb.webp",
+      "kind": "added",
+      "sha256": "7ca6bc3e46a7c904b180d8e1417bde70633c0adf51c27b24f10c313430ec1c8c"
+    },
+    {
+      "path": "assets/www/notebook-covers/renoir.webp",
+      "kind": "added",
+      "sha256": "e8f4a755564ea7e585ee5b12fce37479c334c1e704602c01e0934e07c5accf82"
+    },
+    {
+      "path": "assets/www/notebook-covers/seurat-circus-sideshow-thumb.webp",
+      "kind": "added",
+      "sha256": "8ae11afc0a08da8e2038db8672a8a42dfd16718e2a1eadb0dd654f6419eb2e2e"
+    },
+    {
+      "path": "assets/www/notebook-covers/seurat-circus-sideshow.webp",
+      "kind": "added",
+      "sha256": "5a9405516d0cd1b2055e2385151a05e35bc2ae02b28fe530ede0781b9642520d"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-01-thumb.webp",
+      "kind": "added",
+      "sha256": "0b65fda36a5e5182a04e9f00b728016ab2dfbb98f8a0e04dc47e5505ff8e377a"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-01.webp",
+      "kind": "added",
+      "sha256": "beea9f54011bd654a510fce1f44b1502f49f01d5197ebeb34be8622be912be05"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-02-thumb.webp",
+      "kind": "added",
+      "sha256": "447bbabfb8e8f5a52f9a9f80a4a86b3caffa4d48ff2ada927923c164b72092bd"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-02.webp",
+      "kind": "added",
+      "sha256": "bceadb9e28dc5e8d18c1bf646e374a94c2226b0e8de4f837b4321d2efd206db4"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-03-thumb.webp",
+      "kind": "added",
+      "sha256": "b1bf2e183f9e12cad5ef7f8e838257e3249975c5b38a50d773a5088eb2421d07"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-03.webp",
+      "kind": "added",
+      "sha256": "058d5e03298140c234de9bcc855c69186a3007b4e34fae2d64248a2524f79bb6"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-04-thumb.webp",
+      "kind": "added",
+      "sha256": "3006950aadc5f2b5f02828a64e62cfafb89154a2a4efd90be3b0a90b34907f4b"
+    },
+    {
+      "path": "assets/www/notebook-covers/transmission-04.webp",
+      "kind": "added",
+      "sha256": "cd71d0fde82ce0defc8ce1285f1b8d6a6f5eaed1d181334ad00076483fe15a36"
+    },
+    {
+      "path": "assets/www/notebook-covers/turner-venice-thumb.webp",
+      "kind": "added",
+      "sha256": "eb5e8c5c234cde982be82f72e8b00a652474656c26240c5fcbf201cecc31f05b"
+    },
+    {
+      "path": "assets/www/notebook-covers/turner-venice.webp",
+      "kind": "added",
+      "sha256": "16e49e015d2b9691de749d92236bd6899ceb33910bd06588c965cc1d4d9507e8"
+    },
+    {
+      "path": "assets/www/notebook-covers/van-gogh-sunflowers-thumb.webp",
+      "kind": "added",
+      "sha256": "582a8b9ef4b115f4a2d0d59c25a8c8a1cad3871ea299a294df509769a25acadd"
+    },
+    {
+      "path": "assets/www/notebook-covers/van-gogh-sunflowers.webp",
+      "kind": "added",
+      "sha256": "4c7692aa35209ab37b40c9ac9705e72480b812e5d47dccb6eaccd78345745ad2"
+    },
+    {
+      "path": "assets/www/notebook-covers/van-gogh-wheat-field-thumb.webp",
+      "kind": "added",
+      "sha256": "bb0bd7da2188c8a1d56417fd7fe68879ec1ad32bbf6aaa696f8c7ce8ee16888d"
+    },
+    {
+      "path": "assets/www/notebook-covers/van-gogh-wheat-field.webp",
+      "kind": "added",
+      "sha256": "0b09733f8a91083b4917590ff12e7737cb4b5e17ac578f978f0c95083b4eec73"
+    },
+    {
+      "path": "assets/www/notebook-covers/vermeer-water-pitcher-thumb.webp",
+      "kind": "added",
+      "sha256": "b885f53ef40e0911ecb7eca4e1dab877d44dc0e5faf3125a0e8d363d79e348c7"
+    },
+    {
+      "path": "assets/www/notebook-covers/vermeer-water-pitcher.webp",
+      "kind": "added",
+      "sha256": "57b4e9ac010cbb685373eef05da1194a0a4b36fc675fd8e1096efaa2b6424238"
+    },
+    {
+      "path": "assets/www/src/app-update.js",
+      "kind": "modified",
+      "sha256": "01df814e8bb396a8b9141fa29297763925961d8ade0e96d0e620ae0215de4956"
+    },
+    {
+      "path": "assets/www/src/app.js",
+      "kind": "modified",
+      "sha256": "7db4a5882951d5894185eeb0e3e5860e278f08e1a4176e63275df18f63867ef7"
+    },
+    {
+      "path": "assets/www/src/backup-center.js",
+      "kind": "modified",
+      "sha256": "35ae48ae36ea7b648b0bb033a672ee09e7b90720f1984db7274a6704edac3218"
+    },
+    {
+      "path": "assets/www/src/backup-model.js",
+      "kind": "modified",
+      "sha256": "b61fd2091cc3434bca3e679b55507597012c8ae1ecf60f7593f3c59ca764f274"
+    },
+    {
+      "path": "assets/www/src/chalkboard-mode.js",
+      "kind": "modified",
+      "sha256": "54ca8206457398892e3c361557a97d677afb0a8cc4a9af173faa9c58d0b7d3e8"
+    },
+    {
+      "path": "assets/www/src/core.js",
+      "kind": "modified",
+      "sha256": "6a0f4571e698063b4571285be15015284bee3f71d5f8a2595951ccf03605d304"
+    },
+    {
+      "path": "assets/www/src/cover-title-editor.js",
+      "kind": "modified",
+      "sha256": "aff8a7615b9c4f9fa8269a6cc2a27a47ea2ae804e5642ca4f5e206f830d56329"
+    },
+    {
+      "path": "assets/www/src/export-options.js",
+      "kind": "modified",
+      "sha256": "5df8ef0751756c0df8525385d75a4081e83f4e27a71eb2ade2d71f5a2588a570"
+    },
+    {
+      "path": "assets/www/src/held-shapes.js",
+      "kind": "modified",
+      "sha256": "2ebc3b49df0ba15127c8260d0441faf4cbbe4a5ea6a9d028127b01c011b68e9d"
+    },
+    {
+      "path": "assets/www/src/library-model.js",
+      "kind": "modified",
+      "sha256": "713b2759adf449c717cc0d6d0f16cda48cd1c3e88d8dffa2c0a24120b1ed5f09"
+    },
+    {
+      "path": "assets/www/src/library-view.js",
+      "kind": "modified",
+      "sha256": "7905e5c30852b30e63d53f044206be0c12e04f11e36c829a65c9ccbe71ede3ed"
+    },
+    {
+      "path": "assets/www/src/license-notices.js",
+      "kind": "modified",
+      "sha256": "1145e7f8eeb45a75bc579385e841b2daef00637673edd637a59a3c9239ae6b35"
+    },
+    {
+      "path": "assets/www/src/notebook-covers.js",
+      "kind": "modified",
+      "sha256": "10930ed8e7b2b5cbcc92bf65380158a7be78a2339ab8a0280b84fc79fd41d238"
+    },
+    {
+      "path": "assets/www/src/notebook-delete-confirm.js",
+      "kind": "added",
+      "sha256": "21839a14edde23084e08302dc0d25516479ea7e2eddd478eb730c220315e52a0"
+    },
+    {
+      "path": "assets/www/src/notebook-editor.js",
+      "kind": "modified",
+      "sha256": "d82524cd4ffe81c5056fb97a8c2549ea802cf25035a8a3f20ef21da452b6fd9c"
+    },
+    {
+      "path": "assets/www/src/notebooks.js",
+      "kind": "modified",
+      "sha256": "f7f7d6fae5cde2469f0bea90ce3e06fe2d27036920c844cdbeb482f51e6661f0"
+    },
+    {
+      "path": "assets/www/src/page-templates.js",
+      "kind": "modified",
+      "sha256": "cfca39ffbfe5af14ca288a6438d48a4e77bcca28ce0ab870d60320c239aa88d3"
+    },
+    {
+      "path": "assets/www/src/page-tools.js",
+      "kind": "modified",
+      "sha256": "107808c75a54e9c708adac92a351ffbf18569bcb95563ec099bafb66af3a5a2b"
+    },
+    {
+      "path": "assets/www/src/paper-picker.js",
+      "kind": "modified",
+      "sha256": "9670c908f3994d2d37ea763a0e1d2ea06920b0d122647d62eb30fb40fdea910b"
+    },
+    {
+      "path": "assets/www/src/paper-themes.js",
+      "kind": "modified",
+      "sha256": "4989c5e1b7b5906beaf64b630ae047a7e3c9da4b858feb0beb7f9c09a8dbb2f6"
+    },
+    {
+      "path": "assets/www/src/paper-viewport.js",
+      "kind": "modified",
+      "sha256": "ee049082df4c089cfdde7181a4e76b2ae812fbdc9b799c4578eefd0f70774e47"
+    },
+    {
+      "path": "assets/www/src/pen-renderer.js",
+      "kind": "modified",
+      "sha256": "7296ac1ce77743b4f774bf82b780a157f6dccb7dd0d77ea681ffc93d2ba22afd"
+    },
+    {
+      "path": "assets/www/src/styles.css",
+      "kind": "modified",
+      "sha256": "7511ae8f92b380b1b453fef5dfe4a9352accac740fe69b6ed9b2ac04377cd273"
+    },
+    {
+      "path": "assets/www/src/trash-view.js",
+      "kind": "modified",
+      "sha256": "7bacef8c55cee13f3f1858d66917099f71266eda3d5ff631f5c4fe5aee1022d2"
+    },
+    {
+      "path": "assets/www/version.json",
+      "kind": "modified",
+      "sha256": "324de50545a932949effa57470f628fee170b6c4d727c837461892dfb9939982"
+    }
+  ],
+  "unchanged_calendar_diary": {
+    "src/android-calendar.js": "f27685fbdbe28bc7a55066905b4d6b406f31b405d2470722a31b5bfda09be2c1",
+    "src/diary-dialog.js": "20fe10e16578ccecde932677164ca4f1a3a33bdff6d3d51a74cc55e5f91d32af",
+    "src/diary-model.js": "b82f24d410fbcd7229b6be4a9c727735f24270a1b5670672ce340acad94c1b6b",
+    "src/diary-storage.js": "1d7188184693494cd1c694b4a0df21dea9fb0c2f79a9a579ee67a173b26eb15f",
+    "src/diary.css": "02f96ef3385a749a49d587319d1117562d776a385de0c459d0544844685dafcc",
+    "src/google-calendar-auth.js": "7b5467b8e773df12395ad5571f08aa04ad3f802ba32796088678afc370d364cc",
+    "src/google-calendar-client.js": "e0a45fd762eb9a0ff416d9453b2e23aea6a04c1661bd9b6a66e8a0236f27084b",
+    "src/google-calendar-guide.js": "43e93aee09d7a95e9c01cef819852275f64016e0cbf5ad3b67293a88e49fd191",
+    "src/google-calendar-panel.js": "12b1b80101e4e1b6e89c1c6cf00094dc494a244b15b1b3ba3e349489eda32e0f",
+    "src/google-calendar-sync.js": "e08b83641fdb45e4e37e40bff3133cd87af8961b1de5ba30cfe96a6cc1b30df2",
+    "src/google-calendar-view.js": "c2c7ef3a81f2b4df35b7a887b6883fa02fef48b6cf7daa13f72424d06a92e4f2",
+    "tool-icons/diary.webp": "8f0aad7bccef296a49699bcaec9a234bbe1ef9470d2e28ef91a31066dcff3219"
+  },
+  "tests_passed": 278,
+  "js_modules_syntax_checked": 87,
+  "android_device_tested": false,
+  "installable_signed_apk_ready": false,
+  "blocker": "Original APK signing private key was not available.",
+  "apk_integrity_verified": true,
+  "native_dex_unchanged": true,
+  "stored_entries_aligned": true,
+  "paper_types": 12,
+  "paper_themes": 38,
+  "upstream_commit": "f2877ec723b56089d19a94c30bb5d0ad92a278d4",
+  "code_tests_run": 14,
+  "upstream_tests_run": 264,
+  "unsigned_apk_sha256": "f3648f1d2c61f42501a91dfd2bd6e74fb8e45242ebee405d0147f29b076bdd7f",
+  "unsigned_apk_bytes": 17682246
+}
