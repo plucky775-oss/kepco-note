@@ -1,0 +1,10 @@
+/* Android-only presentation. Source guards independently block restricted handlers. */
+#recognize,#selection-convert,#auto-convert,#retry-recognition,#open-meetings,#install-app,#open-settings,#meeting-start,#meeting-pause,#meeting-stop,#meeting-ai-section,#meeting-insert,#meeting-signature-insert,#meeting-timer,#meeting-capture-status {display:none!important}
+.android-commemoration{font-size:11px;line-height:1.55;color:#788493;margin:8px 0}
+
+/* Keep the tablet status bar (clock, Wi-Fi and battery) clear of app controls.
+   Android WebView can report safe-area-inset-top as 0 even in edge-to-edge mode.
+   Reserve a fallback inset for the entire app, including sidebar and dialogs. */
+:root{--android-status-inset:max(24px,env(safe-area-inset-top,0px))}
+body{padding-top:var(--android-status-inset);box-sizing:border-box}
+body>.app{height:calc(100dvh - var(--android-status-inset));max-height:calc(100dvh - var(--android-status-inset))}
