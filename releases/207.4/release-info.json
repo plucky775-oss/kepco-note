@@ -1,0 +1,26 @@
+{
+  "version_name": "207.4",
+  "version_code": 207004,
+  "package": "kr.kepconote.standalone.v207",
+  "base_apk": "KEPCO-note-207.3.apk",
+  "base_sha256": "3efa391415f38a16041b3af3dfacb118ac3ec410816bd08159322cda7f9be997",
+  "apk_sha256": "fb9771320add5b631de0d7d2920920c288d92f67f6bd5e8d314550cc3eb39d0a",
+  "signer_sha256": "8e3f7bf8d831c60cff0d35110288196bd878c6e078a680ed9b8a5128c8135fad",
+  "assets": {
+    "index.html": "9feaebaf197b8f9f462137b55f4d300cb44f61d0ff04ba06ea0dca41fae859c1",
+    "src/app.js": "ea2e981ec2657b9baede64e4731fec97fa7aa4dd2e37983a8741dd9b0c1cac25",
+    "src/core.js": "1c4212d48ff579bad3e96eb2a505e8ae452e887fa02ae632df5f7018e849aa6a",
+    "src/page-preview.js": "52ff69ce53fcdd345d23ac1147096bfa2b0a0f286176b791209db50b00bb1929",
+    "src/video-objects.js": "3811b8f2b53cafe0eda26a897bad729bc6b9a0d2de5745bf8f12a47b2ef0f842",
+    "src/video-export.js": "16db960036aea90a8066349d480baba2d10b1316d34a00f023f77a9617c47123",
+    "src/device-video-store.js": "7945840983ed1e80522b300f49ec05c5c90e24a48a5a49d66543379fcf8fa08b",
+    "src/video-tools.css": "179bfd9ca8d5ffec04627958131630b440cfc806170be178f83737b53b1cad24",
+    "src/video-tools.js": "f233ac8998253f521d30507659cd96e8f5b451ea22f59722f1c52e72699dc2ae"
+  },
+  "verification": {
+    "node_tests_passed": 88,
+    "javascript_syntax_checked": 91,
+    "native_dex_calendar_diary_insets_unchanged": true,
+    "real_android_device_tested": false
+  }
+}

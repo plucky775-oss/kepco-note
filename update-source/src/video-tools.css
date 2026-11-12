@@ -1,0 +1,31 @@
+.note-videos{position:absolute;inset:0;pointer-events:none;z-index:4}
+/* The saved rectangle is entirely video: no permanent frame, bars or padding. */
+.note-video{position:absolute;pointer-events:auto;background:transparent;color:white;border:0;border-radius:0;touch-action:none;overflow:visible}
+.note-video-body{position:absolute;inset:0;display:grid;place-items:center;background:#101820;overflow:hidden}
+.note-video-body iframe{display:block;width:100%;height:100%;border:0}
+.note-video button,.note-video-editor button{box-sizing:border-box;color:inherit;font:inherit;min-width:44px;min-height:44px;padding:8px;border:0;border-radius:5px}
+.note-video-play{background:transparent;font-size:24px!important;text-shadow:0 1px 6px #000}
+.note-video-selector{position:absolute;inset:0;width:100%;height:100%;z-index:2;background:transparent;border-radius:0!important;cursor:pointer}
+.note-video-selector:hover{background:#ffffff0a}
+.note-video[data-selected=true]{outline:1px solid #6d8ce8;outline-offset:1px;z-index:5}
+.note-video-editor{position:absolute;top:100%;right:8px;z-index:50;max-width:calc(100vw - 16px);color:white}.note-video-controls{display:flex;flex-wrap:wrap;max-width:264px;background:#172437e8;border-radius:5px;box-shadow:0 2px 8px #0002}
+.note-video-controls button{background:transparent;width:44px;flex:0 0 44px}
+.note-video-drag{cursor:move}.note-video-resize{position:absolute;right:0;bottom:0;z-index:3;cursor:nwse-resize;background:#172437c9;width:min(36px,40%);height:min(36px,45%);min-width:0!important;min-height:0!important;padding:0!important}
+.note-video-menu{position:absolute;top:100%;right:0;z-index:4;display:grid;gap:3px;width:210px;max-width:90vw;max-height:calc(100dvh - 220px);overflow:auto;padding:8px;background:#172437f5;border-radius:5px;box-shadow:0 2px 9px #0003}
+.note-video-menu a{color:#d5e4ff;font-size:13px;min-height:44px;display:flex;align-items:center;padding:8px}.note-video-menu p{font-size:11px;line-height:1.4;margin:4px}.note-video-menu button{text-align:left;background:transparent}
+.note-video button:hover,.note-video-editor button:hover{background:#ffffff1f}.note-video button:focus-visible,.note-video-editor button:focus-visible{outline:2px solid #9db5ff;outline-offset:-2px}.note-video [hidden],.note-video-editor[hidden],.note-video-editor [hidden]{display:none!important}
+
+#youtube-dialog input{width:100%;min-height:44px}#youtube-dialog{max-width:480px}#youtube-dialog p{font-size:14px}
+
+
+/* Own editing gestures explicitly, including controls outside the paper. */
+.note-video-selector,.note-video-drag,.note-video-resize{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.note-video[data-editing=true] .note-video-body,.note-video[data-editing=true] iframe{pointer-events:none}
+.note-video-editor button{touch-action:manipulation}
+.note-video-editor .note-video-drag{touch-action:none}
+
+.note-video-body video{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+.note-video-play{max-width:100%;overflow-wrap:anywhere;font-size:clamp(12px,2vw,22px)!important}
+.note-video-consent{box-sizing:border-box;width:100%;height:100%;overflow:auto;padding:12px;font-size:13px;line-height:1.5;background:#172437}
+.note-video-consent p{margin:0 0 8px}.note-video-consent a{color:#cfe2ff;display:block;padding:8px;font-size:12px}
+.note-video-consent button{background:#304b71;margin:4px}

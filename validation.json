@@ -11,7 +11,7 @@
     {
       "path": "assets/www/index.html",
       "kind": "modified",
-      "sha256": "fc681b6438183c6ad9ee5999b13fdbd91f11bdc595eea5663872dfce689c1e57"
+      "sha256": "9feaebaf197b8f9f462137b55f4d300cb44f61d0ff04ba06ea0dca41fae859c1"
     },
     {
       "path": "assets/www/licenses/masterpiece-covers.txt",
@@ -271,7 +271,7 @@
     {
       "path": "assets/www/src/app.js",
       "kind": "modified",
-      "sha256": "7db4a5882951d5894185eeb0e3e5860e278f08e1a4176e63275df18f63867ef7"
+      "sha256": "ea2e981ec2657b9baede64e4731fec97fa7aa4dd2e37983a8741dd9b0c1cac25"
     },
     {
       "path": "assets/www/src/backup-center.js",
@@ -291,7 +291,7 @@
     {
       "path": "assets/www/src/core.js",
       "kind": "modified",
-      "sha256": "6a0f4571e698063b4571285be15015284bee3f71d5f8a2595951ccf03605d304"
+      "sha256": "1c4212d48ff579bad3e96eb2a505e8ae452e887fa02ae632df5f7018e849aa6a"
     },
     {
       "path": "assets/www/src/cover-title-editor.js",
@@ -387,6 +387,36 @@
       "path": "assets/www/version.json",
       "kind": "modified",
       "sha256": "324de50545a932949effa57470f628fee170b6c4d727c837461892dfb9939982"
+    },
+    {
+      "path": "assets/www/src/page-preview.js",
+      "kind": "added",
+      "sha256": "52ff69ce53fcdd345d23ac1147096bfa2b0a0f286176b791209db50b00bb1929"
+    },
+    {
+      "path": "assets/www/src/video-objects.js",
+      "kind": "added",
+      "sha256": "3811b8f2b53cafe0eda26a897bad729bc6b9a0d2de5745bf8f12a47b2ef0f842"
+    },
+    {
+      "path": "assets/www/src/video-export.js",
+      "kind": "added",
+      "sha256": "16db960036aea90a8066349d480baba2d10b1316d34a00f023f77a9617c47123"
+    },
+    {
+      "path": "assets/www/src/device-video-store.js",
+      "kind": "added",
+      "sha256": "7945840983ed1e80522b300f49ec05c5c90e24a48a5a49d66543379fcf8fa08b"
+    },
+    {
+      "path": "assets/www/src/video-tools.css",
+      "kind": "added",
+      "sha256": "179bfd9ca8d5ffec04627958131630b440cfc806170be178f83737b53b1cad24"
+    },
+    {
+      "path": "assets/www/src/video-tools.js",
+      "kind": "added",
+      "sha256": "f233ac8998253f521d30507659cd96e8f5b451ea22f59722f1c52e72699dc2ae"
     }
   ],
   "unchanged_calendar_diary": {
