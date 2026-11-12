@@ -22,31 +22,31 @@ function fakeDocument(){const doc=new EventTarget();doc.hidden=false;const draws
 test('composition draws local video over rendered notes, retains remote placeholders and returns checked output',async()=>{
  const savedRAF=globalThis.requestAnimationFrame,savedCancel=globalThis.cancelAnimationFrame;globalThis.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),10);globalThis.cancelAnimationFrame=clearTimeout;
  const {doc,draws,stopped}=fakeDocument();const input=page('a');input.videoObjects.push({provider:'youtube',id:'remote'});let renderInput,reads=0;
- try{const result=await composeVideoPages([input],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>{reads++;return new Blob(['original']);},renderPage:async p=>{renderInput=p;return {width:900,height:1200};}});assert.equal(result.extension,'mp4');assert.equal(result.blob.size,8);assert.equal(result.duration,.025);assert.deepEqual(renderInput.videoObjects,[input.videoObjects[1]]);assert.equal(input.videoObjects.length,2);assert.equal(reads,2);assert.ok(draws.some(args=>args[0] instanceof FakeVideo));assert.equal(stopped(),1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
+ try{const result=await composeVideoPages([input],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>{reads++;return new Blob(['original']);},renderPage:async p=>{renderInput=p;return {width:900,height:1200};}});assert.equal(result.extension,'mp4');assert.equal(result.blob.size,8);assert.equal(result.duration,.025);assert.deepEqual(renderInput.videoObjects,[input.videoObjects[1]]);assert.equal(input.videoObjects.length,2);assert.equal(reads,2);assert.ok(draws.some(args=>args[0] instanceof FakeVideo));assert.equal(stopped(),1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
 });
-test('missing media and read denials never yield output',async()=>{const {doc}=fakeDocument();await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>null}),/저장된 영상/);await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>{throw Error('access denied');}}),/access denied/);});
+test('missing media and read denials never yield output',async()=>{const {doc}=fakeDocument();await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>null}),/저장된 영상/);await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>{throw Error('access denied');}}),/access denied/);});
 test('resource limits are explicit and bounded',()=>{assert.equal(VIDEO_EXPORT_LIMITS.seconds,600);assert.equal(VIDEO_EXPORT_LIMITS.bytes,128*1024*1024);});
 test('cancel during recording discards output and cleans tracks',async()=>{
  const savedRAF=globalThis.requestAnimationFrame,savedCancel=globalThis.cancelAnimationFrame;globalThis.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),10);globalThis.cancelAnimationFrame=clearTimeout;
  const {doc,stopped}=fakeDocument(),controller=new AbortController();
- try{await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,signal:controller.signal,getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200}),onProgress:p=>{if(p.phase==='record')controller.abort(new DOMException('test cancel','AbortError'));}}),{name:'AbortError'});assert.equal(stopped(),1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
+ try{await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,signal:controller.signal,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200}),onProgress:p=>{if(p.phase==='record')controller.abort(new DOMException('test cancel','AbortError'));}}),{name:'AbortError'});assert.equal(stopped(),1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
 });
 test('empty encoder output never reports completion',async()=>{
  const savedRAF=globalThis.requestAnimationFrame,savedCancel=globalThis.cancelAnimationFrame;globalThis.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),10);globalThis.cancelAnimationFrame=clearTimeout;
  class EmptyRecorder extends FakeRecorder{stop(){this.state='inactive';queueMicrotask(()=>this.dispatchEvent(new Event('stop')));}}
- const {doc}=fakeDocument();try{await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:EmptyRecorder,getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})}),/비어 있습니다/);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
+ const {doc}=fakeDocument();try{await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:EmptyRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})}),/비어 있습니다/);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
 });
 test('audio graph preserves each sequential source volume without requesting microphone',async()=>{
  const savedRAF=globalThis.requestAnimationFrame,savedCancel=globalThis.cancelAnimationFrame;globalThis.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),10);globalThis.cancelAnimationFrame=clearTimeout;
  let closed=0,sources=0;const gains=[];
  class FakeAudio{constructor(){this.state='suspended';}async resume(){this.state='running';}createMediaStreamDestination(){return {stream:{getAudioTracks:()=>[{stop(){}}],getTracks:()=>[{stop(){}}]}};}createMediaElementSource(){sources++;return {connect(){},disconnect(){}};}createGain(){const gain={gain:{value:1},connect(){},disconnect(){}};gains.push(gain);return gain;}async close(){this.state='closed';closed++;}}
  const {doc}=fakeDocument(),p=page('a');p.videoObjects.push({...p.videoObjects[0],id:'v2'});
- try{const result=await composeVideoPages([p],{includeAudio:true,document:doc,Recorder:FakeRecorder,Audio:FakeAudio,getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})});assert.equal(result.extension,'mp4');assert.equal(sources,2);assert.deepEqual(gains.map(g=>g.gain.value),[1,1]);assert.equal(closed,1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
+ try{const result=await composeVideoPages([p],{includeAudio:true,document:doc,Recorder:FakeRecorder,Audio:FakeAudio,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})});assert.equal(result.extension,'mp4');assert.equal(sources,2);assert.deepEqual(gains.map(g=>g.gain.value),[1,1]);assert.equal(closed,1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
 });
 test('backgrounding during recording cancels and disposes media',async()=>{
  const savedRAF=globalThis.requestAnimationFrame,savedCancel=globalThis.cancelAnimationFrame;globalThis.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),10);globalThis.cancelAnimationFrame=clearTimeout;
  const {doc,stopped}=fakeDocument();
- try{await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200}),onProgress:p=>{if(p.phase==='record'){doc.hidden=true;doc.dispatchEvent(new Event('visibilitychange'));}}}),/화면을 떠나/);assert.equal(stopped(),1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
+ try{await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200}),onProgress:p=>{if(p.phase==='record'){doc.hidden=true;doc.dispatchEvent(new Event('visibilitychange'));}}}),/화면을 떠나/);assert.equal(stopped(),1);}finally{globalThis.requestAnimationFrame=savedRAF;globalThis.cancelAnimationFrame=savedCancel;}
 });
 
 test('sequential export follows specified order without overlapping playback or changing stacking',async()=>{
@@ -56,22 +56,22 @@ test('sequential export follows specified order without overlapping playback or 
  get currentTime(){return this.started===null?this.saved:Math.min(this.duration,(performance.now()-this.started)/1000);}get ended(){return this.currentTime>=this.duration;}load(){}removeAttribute(){}pause(){this.saved=this.currentTime;this.started=null;active.delete(this.id);}play(){assert.equal(active.size,0,'previous video must stop before next starts');active.add(this.id);played.push(this.id);this.started=performance.now();return Promise.resolve();}}
  doc.hidden=false;doc.createElement=tag=>tag==='video'?new TimedVideo():{width:900,height:1200,getContext:()=>({drawImage(v){if(v instanceof TimedVideo)draws.push({id:v.id,time:v.currentTime,playing:active.has(v.id)});},fillRect(){}}),captureStream:()=>({getTracks:()=>[{stop(){}}],addTrack(){}})};
  const p=page('a');p.videoObjects.push({...p.videoObjects[0],id:'v2'});const original=structuredClone(p);
- try{const result=await composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,videoOrder:{a:['v2','v']},getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})});assert.equal(result.duration,.08);assert.deepEqual(played,[3,2]);assert.equal(active.size,0);assert.deepEqual(p,original);assert.ok(draws.some(d=>d.id===2&&d.time===0&&!d.playing));assert.ok(draws.some(d=>d.id===3&&d.time===.04&&!d.playing));assert.deepEqual(draws.slice(0,2).map(d=>d.id),[2,3]);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
+ try{const result=await composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,videoOrder:{a:['v2','v']},getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})});assert.equal(result.duration,.08);assert.deepEqual(played,[3,2]);assert.equal(active.size,0);assert.deepEqual(p,original);assert.ok(draws.some(d=>d.id===2&&d.time===0&&!d.playing));assert.ok(draws.some(d=>d.id===3&&d.time===.04&&!d.playing));assert.deepEqual(draws.slice(0,2).map(d=>d.id),[2,3]);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
 });
 test('sum of sequential durations is checked against total export limit before recording',async()=>{
  const {doc}=fakeDocument(),create=doc.createElement;doc.createElement=tag=>{const el=create(tag);if(tag==='video')el.duration=400;return el;};const p=page('a');p.videoObjects.push({...p.videoObjects[0],id:'v2'});
- await assert.rejects(composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>new Blob(['original'])}),/10분/);
+ await assert.rejects(composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original'])}),/10분/);
 });
 test('stalled first video fails rather than starting the next source',async()=>{
  const oldRAF=globalThis.requestAnimationFrame,oldCancel=globalThis.cancelAnimationFrame;globalThis.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()+2000),1);globalThis.cancelAnimationFrame=clearTimeout;
  const {doc}=fakeDocument(),create=doc.createElement,played=[];let id=0;doc.createElement=tag=>{const el=create(tag);if(tag==='video'){el.id=id++;el.ended=false;el.duration=5;el.currentTime=0;el.play=async()=>played.push(el.id);}return el;};const p=page('a');p.videoObjects.push({...p.videoObjects[0],id:'v2'});
- try{await assert.rejects(composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})}),/지연/);assert.deepEqual(played,[2]);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
+ try{await assert.rejects(composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})}),/지연/);assert.deepEqual(played,[2]);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
 });
 test('sequence waits for asynchronous recorder pause/resume transitions',async()=>{
  const oldRAF=globalThis.requestAnimationFrame,oldCancel=globalThis.cancelAnimationFrame;globalThis.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),1);globalThis.cancelAnimationFrame=clearTimeout;
  let recorder;const transitions=[];class AsyncRecorder extends FakeRecorder{constructor(...args){super(...args);recorder=this;}pause(){setTimeout(()=>{this.state='paused';transitions.push('paused');this.dispatchEvent(new Event('pause'));},5);}resume(){setTimeout(()=>{this.state='recording';transitions.push('resumed');this.dispatchEvent(new Event('resume'));},5);}}
  const {doc}=fakeDocument(),create=doc.createElement;doc.createElement=tag=>{const element=create(tag);if(tag==='video')element.play=async()=>{assert.equal(recorder.state,'recording');transitions.push('play');element.currentTime=element.duration;};return element;};const p=page('a');p.videoObjects.push({...p.videoObjects[0],id:'v2'});
- try{const result=await composeVideoPages([p],{includeAudio:false,document:doc,Recorder:AsyncRecorder,getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})});assert.equal(result.duration,.05);assert.deepEqual(transitions,['play','paused','resumed','play','paused']);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
+ try{const result=await composeVideoPages([p],{includeAudio:false,document:doc,Recorder:AsyncRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})});assert.equal(result.duration,.05);assert.deepEqual(transitions,['play','paused','resumed','play','paused']);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
 });
 
 test('audible autoplay denial pauses capture and retries same source from explicit gesture',async()=>{
@@ -79,10 +79,41 @@ test('audible autoplay denial pauses capture and retries same source from explic
  const {doc}=fakeDocument(),original=doc.createElement;let allowed=false,calls=0,recorder,requests=0;
  doc.createElement=tag=>{const el=original(tag);if(tag==='video')el.play=()=>{calls++;if(!allowed)return Promise.reject(new DOMException('blocked','NotAllowedError'));el.currentTime=el.duration;return Promise.resolve();};return el;};
  class Observed extends FakeRecorder{constructor(...args){super(...args);recorder=this;}}
- try{const result=await composeVideoPages([page('a'),page('b')],{includeAudio:false,document:doc,Recorder:Observed,getMediaBlob:async()=>new Blob(['source']),renderPage:async()=>({width:900,height:1200}),onPlaybackBlocked:async({start,signal})=>{requests++;assert.equal(recorder.state,'paused');assert.equal(signal.aborted,false);allowed=true;const pending=start();assert.equal(recorder.state,'recording');await pending;allowed=false;}});assert.ok(result.blob.size);assert.equal(requests,2);assert.equal(calls,4);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
+ try{const result=await composeVideoPages([page('a'),page('b')],{includeAudio:false,document:doc,Recorder:Observed,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200}),onPlaybackBlocked:async({start,signal})=>{requests++;assert.equal(recorder.state,'paused');assert.equal(signal.aborted,false);allowed=true;const pending=start();assert.equal(recorder.state,'recording');await pending;allowed=false;}});assert.ok(result.blob.size);assert.equal(requests,2);assert.equal(calls,4);}finally{globalThis.requestAnimationFrame=oldRAF;globalThis.cancelAnimationFrame=oldCancel;}
 });
 test('autoplay denial without a gesture handler fails with actionable Korean message',async()=>{
  const {doc,stopped}=fakeDocument(),original=doc.createElement;doc.createElement=tag=>{const el=original(tag);if(tag==='video')el.play=()=>Promise.reject(new DOMException('blocked','NotAllowedError'));return el;};
- await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>new Blob(['source']),renderPage:async()=>({width:900,height:1200})}),/자동 재생.*계속/);assert.equal(stopped(),1);
+ await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:8,mimeType:'video/mp4'}),getMediaBlob:async()=>new Blob(['original']),renderPage:async()=>({width:900,height:1200})}),/자동 재생.*계속/);assert.equal(stopped(),1);
 });
 
+
+test('manifest preflight rejects individual and cumulative oversize before any original reads',async()=>{
+ for(const sizes of [[VIDEO_EXPORT_LIMITS.bytes+1],[VIDEO_EXPORT_LIMITS.bytes,1]]){
+ const {doc}=fakeDocument(),p=page('a');p.videoObjects=sizes.map((_,i)=>({...p.videoObjects[0],id:String(i)}));let reads=0,probes=0;
+ await assert.rejects(composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async object=>{probes++;return {size:sizes[Number(object.id)]};},getMediaBlob:async()=>{reads++;throw Error('must not decrypt');}}),/128MB/);
+ assert.equal(reads,0);assert.equal(probes,sizes.length);
+ }
+});
+test('missing, invalid and denied manifests fail closed without reading originals',async()=>{
+ for(const info of [null,{size:0},{size:-1},{size:NaN},{size:1.5},{size:'8'},{size:Infinity}]){
+ const {doc}=fakeDocument();let reads=0;
+ await assert.rejects(composeVideoPages([page('a')],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>info,getMediaBlob:async()=>{reads++;}}),/영상 정보/);assert.equal(reads,0);
+ }
+ const {doc}=fakeDocument();let reads=0;const options={includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaBlob:async()=>{reads++;}};
+ await assert.rejects(composeVideoPages([page('a')],options),/안전하게/);
+ await assert.rejects(composeVideoPages([page('a')],{...options,getMediaInfo:async()=>{throw Error('access denied');}}),/access denied/);assert.equal(reads,0);
+});
+test('cancel during manifest preflight prevents subsequent metadata and original reads',async()=>{
+ const {doc}=fakeDocument(),controller=new AbortController(),p=page('a');p.videoObjects.push({...p.videoObjects[0],id:'v2'});let probes=0,reads=0;
+ await assert.rejects(composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,signal:controller.signal,getMediaInfo:async()=>{probes++;controller.abort();return {size:8};},getMediaBlob:async()=>{reads++;}}),{name:'AbortError'});assert.equal(probes,1);assert.equal(reads,0);
+});
+test('changed manifest is rejected before decoding and mismatched blob before video allocation',async()=>{
+ const {doc}=fakeDocument();let probes=0,reads=0,videos=0;const create=doc.createElement;doc.createElement=tag=>{if(tag==='video')videos++;return create(tag);};
+ const options={includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async()=>({size:++probes===1?8:9}),getMediaBlob:async()=>{reads++;return new Blob(['original']);}};
+ await assert.rejects(composeVideoPages([page('a')],options),/바뀌었습니다/);assert.equal(reads,0);
+ await assert.rejects(composeVideoPages([page('a')],{...options,getMediaInfo:async()=>({size:7})}),/크기가 저장 정보와 다릅니다/);assert.equal(reads,1);assert.equal(videos,0);
+});
+test('all selected manifests precede first original read and reads carry a verified size ceiling',async()=>{
+ const {doc}=fakeDocument(),p=page('a');p.videoObjects.push({...p.videoObjects[0],id:'v2'});const seen=[];
+ await assert.rejects(composeVideoPages([p],{includeAudio:false,document:doc,Recorder:FakeRecorder,getMediaInfo:async object=>{seen.push(object.id);return {size:8};},getMediaBlob:async(object,page,{maxBytes})=>{assert.deepEqual(seen,['v','v2','v']);assert.equal(maxBytes,8);throw Error('first read reached');}}),/first read reached/);
+});

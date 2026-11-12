@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
-import {saveDeviceVideo,readDeviceVideo,deleteDeviceVideo,clearDeviceVideos,DEVICE_VIDEO_CHUNK_BYTES,MAX_DEVICE_VIDEO_BYTES} from '../../update-source/src/device-video-store.js';
+import {getDeviceVideoInfo,listDeviceVideoStorage,deleteUnreferencedDeviceVideo,saveDeviceVideo,readDeviceVideo,deleteDeviceVideo,clearDeviceVideos,DEVICE_VIDEO_CHUNK_BYTES,MAX_DEVICE_VIDEO_BYTES} from '../../update-source/src/device-video-store.js';
 
 // Small dependency-free IndexedDB fake: asynchronous requests, copy-on-commit
 // transactions, automatic rollback, serialized writers, and injectable faults.
@@ -37,6 +37,8 @@ function fakeDatabase(hooks={}){
       }else if(operation==='delete'){store.delete(serialized);r.result=undefined;}
       else if(operation==='clear'){store.clear();r.result=undefined;}
       else if(operation==='get')r.result=structuredClone(store.get(serialized));
+      else if(operation==='getAll')r.result=structuredClone([...store.values()]);
+      else if(operation==='count')r.result=store.size;
       else if(operation==='getKey')r.result=store.has(serialized)?structuredClone(key):undefined;
       hooks.afterRequest?.({...event,result:r.result});
       r.onsuccess?.();
@@ -44,7 +46,7 @@ function fakeDatabase(hooks={}){
     });
     return r;
    }
-   return {get:key=>request('get',key),getKey:key=>request('getKey',key),add:value=>request('add',keyOf(name,value),value),delete:key=>request('delete',key),clear:()=>request('clear')};
+   return {getAll:()=>request('getAll'),count:()=>request('count'),get:key=>request('get',key),getKey:key=>request('getKey',key),add:value=>request('add',keyOf(name,value),value),delete:key=>request('delete',key),clear:()=>request('clear')};
   }};
   function pump(){
    if(aborted||finished)return;
@@ -327,3 +329,29 @@ test('no network upload, database deletion, implicit clearing or storage permiss
  assert.doesNotMatch(source.replace(/\/\/[^\n]*/g,''),/\.persist\s*\(/);
 });
 
+
+test('metadata preflight and storage inventory never read chunks or decrypt',()=>harness(async fake=>{
+ const ref=await saveDeviceVideo(new Blob(['video'],{type:'video/mp4'}));fake.state.trace.length=0;
+ assert.deepEqual(await getDeviceVideoInfo(ref),{size:5,mimeType:'video/mp4'});
+ const inventory=await listDeviceVideoStorage();assert.equal(inventory.assets.length,1);assert.equal(inventory.assets[0].size,5);assert.equal(inventory.pendingCount,0);
+ assert.ok(fake.state.trace.every(event=>event.name!=='chunks'));
+ await assert.rejects(readDeviceVideo(ref,{maxBytes:4}),/한도/);
+ assert.ok(fake.state.trace.every(event=>event.name!=='chunks'));
+}));
+test('explicit orphan removal is guarded and preserves another asset',()=>harness(async fake=>{
+ const a=await saveDeviceVideo(new Blob(['first'])),b=await saveDeviceVideo(new Blob(['second']));
+ const asset=(await listDeviceVideoStorage()).assets.find(x=>x.assetId===a.assetId);
+ await assert.rejects(deleteUnreferencedDeviceVideo(asset),{name:'AbortError'});
+ assert.ok(await getDeviceVideoInfo(a));
+ await deleteUnreferencedDeviceVideo(asset,{isAllowed:()=>true});
+ assert.equal(await getDeviceVideoInfo(a),null);assert.equal((await readDeviceVideo(b)).size,6);
+}));
+test('reference change during orphan removal aborts transaction',async()=>{
+ let allow=true,armed=false;
+ await harness(async fake=>{
+  const ref=await saveDeviceVideo(new Blob(['kept']));
+  const asset=(await listDeviceVideoStorage()).assets[0];armed=true;
+  await assert.rejects(deleteUnreferencedDeviceVideo(asset,{isAllowed:()=>allow}),{name:'AbortError'});
+  allow=true;armed=false;assert.equal((await readDeviceVideo(ref)).size,4);
+ },{afterRequest:({operation,name})=>{if(armed&&operation==='delete'&&name==='manifests')allow=false;}});
+});

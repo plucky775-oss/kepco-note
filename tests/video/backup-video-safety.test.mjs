@@ -1,0 +1,12 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+// This repository is an APK asset overlay; unchanged base-APK dependencies
+// are absent. Load the actual modules with unrelated imports stubbed here.
+async function moduleWithStubs(file,stubs){const source=await readFile(new URL('../../update-source/src/'+file,import.meta.url),'utf8');return import('data:text/javascript;base64,'+Buffer.from(stubs+'\n'+source.replace(/^import .*;$/gm,'')).toString('base64'));}
+const {mountBackupCenter}=await moduleWithStubs('backup-center.js',`const listTemplates=()=>[],exportTemplates=()=>'',importTemplates=()=>{},readBackupFile=()=>{},fingerprint=()=>{},verifyDownload=()=>{},diaryBackupText=()=>'',importDiaryEntries=()=>{},listRecordings=()=>[],getRecording=()=>{},recordingFilename=()=>'';`);
+const {inspectBackup}=await moduleWithStubs('backup-model.js',`const parseTemplates=()=>[],parseBackup=text=>JSON.parse(text).notes,readDiaryBackup=()=>{},DIARY_BACKUP_BYTES=268435456;`);
+class Element{constructor(){this.children=[];this.textContent="";}append(...c){this.children.push(...c);}setAttribute(){}addEventListener(){}replaceChildren(...c){this.children=c;}querySelectorAll(){return [];}remove(){}}
+function center(download){const root={body:new Element(),createElement:()=>new Element()};return mountBackupCenter({root,download,services:{fingerprint:async()=>null}});}
+test('backup receipt waits for download acceptance and does not claim save success',async()=>{let resolve;const c=center(()=>new Promise(r=>resolve=r));const request=c.requestDownload(new Blob(['data']),'backup.json');await Promise.resolve();await Promise.resolve();assert.equal(c.elements.status.textContent,'');resolve();await request;assert.match(c.elements.status.textContent,/다시 선택/);assert.equal(c.elements.receipts.children.length,1);});
+test('backup rejected download produces no receipt or success status',async()=>{for(const download of [async()=>{throw Error('disk full');},async()=>false]){const c=center(download);await assert.rejects(c.requestDownload(new Blob(['data']),'backup.json'));assert.equal(c.elements.receipts.children.length,0);assert.equal(c.elements.status.textContent,'');}});
+test('restore preview explicitly warns video original bytes are excluded',()=>{const info=inspectBackup(JSON.stringify({version:1,notes:[{id:'page1',title:'Sample'}]}));assert.match(info.warning,/동영상 원본은 포함되지 않습니다/);assert.match(info.warning,/원본 영상 파일을 다시 선택/);});

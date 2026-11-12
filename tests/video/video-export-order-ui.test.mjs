@@ -104,7 +104,7 @@ function fixture(t,{pages=samplePages(),currentId=pages[0].id,prepare=async()=>{
   URL.revokeObjectURL=url=>doc.urls.delete(url);
   t.after(()=>{for(const [name,descriptor] of descriptors)descriptor?Object.defineProperty(globalThis,name,descriptor):delete globalThis[name];URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke;});
   const reads=[],downloads=[],busy=[];
-  const ui=videoExport.mountVideoExport({getPages:()=>pages,getCurrentId:()=>currentId,document:doc,prepare,onBusyChange:value=>busy.push(value),renderPage:async()=>({width:900,height:1200}),getMediaBlob:async object=>{reads.push(object.id);return Object.assign(new Blob(['source-video']),{mediaId:object.id});},download:(...args)=>downloads.push(args)});
+  const ui=videoExport.mountVideoExport({getPages:()=>pages,getCurrentId:()=>currentId,document:doc,prepare,onBusyChange:value=>busy.push(value),renderPage:async()=>({width:900,height:1200}),getMediaInfo:async()=>({size:12,mimeType:'video/mp4'}),getMediaBlob:async object=>{reads.push(object.id);return Object.assign(new Blob(['source-video']),{mediaId:object.id});},download:(...args)=>downloads.push(args)});
   const button=text=>doc.querySelectorAll('button').find(element=>element.textContent===text);
   const field=label=>doc.querySelectorAll('label').find(element=>element.textContent.startsWith(label))?.querySelector('input');
   const order=()=>doc.getElementById('video-export-order');

@@ -13,7 +13,7 @@ export function inspectBackup(text){
  const pages=parseBackup(text),ids=new Set();for(const p of pages){if(!p.id||ids.has(p.id))throw Error('페이지를 구분하는 정보가 없거나 중복되어 복원할 수 없습니다.');ids.add(p.id);}
  const split=data.part!==undefined||data.partCount!==undefined;
  if(split&&(!Number.isSafeInteger(data.part)||!Number.isSafeInteger(data.partCount)||data.part<1||data.partCount<1||data.part>data.partCount||typeof data.backupSetId!=='string'||!/^[A-Za-z0-9_-]{1,100}$/.test(data.backupSetId)))throw Error('분할 백업 정보가 올바르지 않습니다.');
- return {kind:'notes',data,pages,count:pages.length,items:pages.map(p=>p.title||'제목 없는 노트'),warning:`다이어리·녹음 원본·녹음창의 편집 중 회의록·내 글씨체 파일·휴지통·별도 보관 양식은 제외됩니다.${split?` 분할 파일 ${data.part}/${data.partCount}: 앱을 닫거나 새로고침하지 않은 상태에서 모든 파일을 확인하고 복원하세요.`:''}`};
+ return {kind:'notes',data,pages,count:pages.length,items:pages.map(p=>p.title||'제목 없는 노트'),warning:`동영상 원본은 포함되지 않습니다. 위치·연결 정보만 복원되므로 이 기기에 저장본이 없으면 원본 영상 파일을 다시 선택해야 합니다. 다이어리·녹음 원본·녹음창의 편집 중 회의록·내 글씨체 파일·휴지통·별도 보관 양식은 제외됩니다.${split?` 분할 파일 ${data.part}/${data.partCount}: 앱을 닫거나 새로고침하지 않은 상태에서 모든 파일을 확인하고 복원하세요.`:''}`};
 }
 export async function readBackupFile(file){if(!file||file.size>DIARY_BACKUP_BYTES)throw Error('백업 파일은 256MiB 이하로 선택해주세요.');return inspectBackup(await file.text());}
 export async function fingerprint(blob,subtle=globalThis.crypto?.subtle){if(!subtle)throw Error('이 환경에서는 파일이 원본과 같은지 확인할 수 없습니다.');return Array.from(new Uint8Array(await subtle.digest('SHA-256',await blob.arrayBuffer())),x=>x.toString(16).padStart(2,'0')).join('');}

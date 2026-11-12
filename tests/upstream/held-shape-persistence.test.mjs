@@ -19,7 +19,7 @@ for(const {id:penKind} of PEN_KINDS)test(`held shape ${penKind} backup, selectio
 test('display and export pipeline use exact corrected points regardless of smoothing or optional release cleanup',async()=>{
  const ink={id:'closed',heldShape:'polygon',penKind:'pencil',color:'#223247',width:3,points},page={...makeNote(),strokes:[ink],smooth:.85,shapeCorrection:true};
  const scope={note:page,tool:'pen',correctShape,smoothPoints,WeakMap};vm.createContext(scope);vm.runInContext(source.slice(source.indexOf('const displayCache='),source.indexOf('function path(')),scope);assert.equal(scope.displayPoints(ink),points);assert.equal(scope.displayPoints(ink,true),points);
- let rendered;const canvas={getContext:()=>({scale(){}})};Object.assign(scope,{PAGE:{width:900,height:1200},document:{createElement:()=>canvas},drawPaperBackground(){},drawPageImages:async()=>{},activeConvertedGroups:()=>[],drawStyledStroke:(ctx,s,p)=>{rendered={s,p};}});
+ let rendered;const canvas={getContext:()=>({scale(){}})};Object.assign(scope,{PAGE:{width:900,height:1200},document:{createElement:()=>canvas},drawPaperBackground(){},drawPageImages:async()=>{},drawVideoPlaceholders(){},activeConvertedGroups:()=>[],drawStyledStroke:(ctx,s,p)=>{rendered={s,p};}});
  vm.runInContext(source.slice(source.indexOf('export async function renderPageCanvas('),source.indexOf('\nasync function ',source.indexOf('export async function renderPageCanvas(')+1)).replace('export async','async'),scope);
  await scope.renderPageCanvas(page);assert.equal(rendered.s,ink);assert.equal(rendered.p,points);
 });

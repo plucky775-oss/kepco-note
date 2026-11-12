@@ -184,7 +184,7 @@ export async function saveDeviceVideo(file,{isAllowed=()=>true}={}){
  }finally{rawKey?.fill(0);assetKey=undefined;db?.close();}
 }
 
-export async function readDeviceVideo(videoObject,{isAllowed=()=>true}={}){
+export async function readDeviceVideo(videoObject,{isAllowed=()=>true,maxBytes=MAX_DEVICE_VIDEO_BYTES}={}){
  allowed(isAllowed);
  // Old local-video placeholders have neither value and still ask to reselect.
  const assetId=videoObject?.assetId,assetKey=videoObject?.assetKey;
@@ -197,6 +197,7 @@ export async function readDeviceVideo(videoObject,{isAllowed=()=>true}={}){
   const stored=await getRecord(db,'manifests',assetId,isAllowed);allowed(isAllowed);
   if(stored===undefined)return null;
   const manifest=validateManifest(stored,assetId);
+  if(!Number.isSafeInteger(maxBytes)||maxBytes<=0||manifest.size>maxBytes)throw issue('영상 크기가 출력 한도를 넘거나 바뀌었습니다. 다시 확인해주세요.');
   const key=await crypto.subtle.importKey('raw',rawKey,'AES-GCM',false,['decrypt']);allowed(isAllowed);
   rawKey.fill(0);
   for(let index=0;index<manifest.chunkCount;index++){
@@ -242,3 +243,57 @@ export async function clearDeviceVideos(){
  }catch(error){throw storageError(error);}finally{db?.close();}
 }
 
+
+// Metadata-only export preflight: never reads chunks or exposes encryption keys.
+export async function getDeviceVideoInfo(videoObject,{isAllowed=()=>true}={}){
+ allowed(isAllowed);
+ const assetId=videoObject?.assetId;
+ if(assetId===undefined)return null;
+ if(!validId(assetId))throw damaged();
+ let db;
+ try{
+  db=await openDatabase(isAllowed);
+  const value=await getRecord(db,'manifests',assetId,isAllowed);
+  if(value===undefined)return null;
+  const manifest=validateManifest(value,assetId);
+  return {size:manifest.size,mimeType:manifest.mimeType};
+ }catch(error){throw storageError(error);}finally{db?.close();}
+}
+
+// Scan metadata only, never load every encrypted video into memory for a count.
+export async function listDeviceVideoStorage({isAllowed=()=>true}={}){
+ let db;
+ try{
+  db=await openDatabase(isAllowed);
+  return await transact(db,['manifests','pending'],'readonly',isAllowed,(tx,watch,set)=>{
+   let manifests,pending;
+   const finish=()=>{if(manifests&&pending!==undefined)set({assets:manifests.map(value=>{
+    const m=validateManifest(value,value.assetId);
+    return {assetId:m.assetId,size:m.size,storedBytes:m.size+m.chunkCount*28};
+   }),pendingCount:pending});};
+   watch(tx.objectStore('manifests').getAll(),value=>{manifests=value;finish();});
+   watch(tx.objectStore('pending').count(),value=>{pending=value;finish();});
+  });
+ }catch(error){throw storageError(error);}finally{db?.close();}
+}
+
+// Explicit confirmed cleanup only. Check live references at every IDB boundary;
+// never call the unconditional cancellation cleanup helper for this operation.
+export async function deleteUnreferencedDeviceVideo(asset,{isAllowed=()=>false}={}){
+ if(!validId(asset?.assetId))throw damaged();
+ let db;
+ try{
+  db=await openDatabase(isAllowed);
+  await transact(db,STORES,'readwrite',isAllowed,(tx,watch)=>{
+   watch(tx.objectStore('manifests').get(asset.assetId),value=>{
+    const m=validateManifest(value,asset.assetId);
+    if(m.size!==asset.size)throw issue('영상 저장 상태가 바뀌었습니다. 목록을 새로 확인해주세요.');
+    watch(tx.objectStore('pending').getKey(asset.assetId),pending=>{
+     if(pending!==undefined)throw issue('저장 중인 영상은 삭제할 수 없습니다.');
+     watch(tx.objectStore('manifests').delete(asset.assetId));
+     for(let index=0;index<m.chunkCount;index++)watch(tx.objectStore('chunks').delete([asset.assetId,index]));
+    });
+   });
+  });
+ }catch(error){throw storageError(error);}finally{db?.close();}
+}

@@ -51,23 +51,34 @@ function playVideos(entries,signal){
  });
 }
 function releaseVideo(entry){try{entry.video.pause();entry.video.removeAttribute('src');entry.video.load();entry.source?.disconnect();entry.gain?.disconnect();}catch{}URL.revokeObjectURL(entry.url);}
-async function loadVideo(object,page,{getMediaBlob,signal,doc}){
- aborted(signal);const blob=await getMediaBlob(object,page,{signal});aborted(signal);
+async function mediaInfo(object,page,{getMediaInfo,signal}){
+ aborted(signal);
+ if(typeof getMediaInfo!=='function')throw Error('영상 크기를 안전하게 확인할 수 없습니다. 앱을 다시 열어주세요.');
+ const info=await getMediaInfo(object,page,{signal});aborted(signal);
+ if(!info||!Number.isSafeInteger(info.size)||info.size<=0)throw Error('기기에 저장된 영상 정보를 확인하지 못했습니다. 원본 영상을 다시 연결해주세요.');
+ if(info.size>VIDEO_EXPORT_LIMITS.bytes)throw Error('선택한 영상이 128MB를 넘습니다. 페이지 범위를 나누어 출력해주세요.');
+ return info;
+}
+async function loadVideo(object,page,{getMediaBlob,getMediaInfo,expectedSize,signal,doc}){
+ const info=await mediaInfo(object,page,{getMediaInfo,signal});
+ if(info.size!==expectedSize)throw Error('저장된 영상이 바뀌었습니다. 출력 범위를 다시 선택해주세요.');
+ const blob=await getMediaBlob(object,page,{signal,maxBytes:expectedSize});aborted(signal);
  if(!(blob instanceof Blob)||!blob.size)throw Error('기기에 저장된 영상이 없습니다. 원본 영상을 다시 넣어주세요.');
+ if(blob.size!==expectedSize)throw Error('영상 크기가 저장 정보와 다릅니다. 원본 영상을 다시 연결해주세요.');
  const video=doc.createElement('video'),url=URL.createObjectURL(blob),entry={video,url,object,bytes:blob.size};
  try{video.playsInline=true;video.preload='auto';video.src=url;video.load();await waitEvent(video,'loadeddata',{signal,ready:()=>video.readyState>=2});
  if(!video.videoWidth||!video.videoHeight||!Number.isFinite(video.duration)||video.duration<=0)throw Error('이 영상의 화면 또는 길이를 읽지 못했습니다.');return entry;
  }catch(error){releaseVideo(entry);throw error;}
 }
 /** Call from a user click: the AudioContext is created/resumed before the first await. */
-export async function composeVideoPages(pages,{renderPage,getMediaBlob,includeAudio=true,stillSeconds=3,videoOrder={},signal,onProgress=()=>{},onPlaybackBlocked,document:doc=globalThis.document,Recorder=globalThis.MediaRecorder,Audio=globalThis.AudioContext||globalThis.webkitAudioContext,audioContext}={}){
+export async function composeVideoPages(pages,{renderPage,getMediaBlob,getMediaInfo,includeAudio=true,stillSeconds=3,videoOrder={},signal,onProgress=()=>{},onPlaybackBlocked,document:doc=globalThis.document,Recorder=globalThis.MediaRecorder,Audio=globalThis.AudioContext||globalThis.webkitAudioContext,audioContext}={}){
  if(!Array.isArray(pages)||!pages.length||pages.length>VIDEO_EXPORT_LIMITS.pages||pages.some(p=>p._locked))throw Error('출력할 페이지를 다시 선택해주세요.');
  if(!pages.some(p=>p.videoObjects?.some(v=>v.provider==='local')))throw Error('출력할 기기 영상이 없습니다.');
  videoPageSeconds([],stillSeconds);for(const page of pages)orderedPageVideos(page,videoOrder);aborted(signal);
  const mimeType=videoExportMime(Recorder),canvas=doc.createElement('canvas');canvas.width=900;canvas.height=1200;
  const ctx=canvas.getContext('2d');if(!ctx||!canvas.captureStream)throw Error('이 브라우저에서는 페이지 영상 합성을 지원하지 않습니다.');
  let audio,stream,recorder,entries=[],base=null,frame=0,totalBytes=0,outputBytes=0,elapsed=0,recordingError=null,complete=false;
- const chunks=[],timings=[];let destination;
+ const chunks=[],timings=[],sizes=new Map();let destination;
  const ownAbort=new AbortController(),cancel=()=>ownAbort.abort(signal?.reason||new DOMException('취소','AbortError'));
  signal?.addEventListener('abort',cancel,{once:true});const workSignal=ownAbort.signal;
  const onHidden=()=>{if(doc.hidden)ownAbort.abort(new DOMException('화면을 떠나 영상 출력이 중단되었습니다. 앱을 연 상태로 다시 시작해주세요.','AbortError'));};
@@ -75,11 +86,21 @@ export async function composeVideoPages(pages,{renderPage,getMediaBlob,includeAu
  try{
  if(includeAudio){if(!Audio)throw Error('이 브라우저에서는 소리 합성을 지원하지 않습니다. 소리 포함을 해제해주세요.');audio=audioContext||new Audio();await audio.resume();if(audio.state!=='running')throw Error('소리를 시작하지 못했습니다. 출력 버튼을 다시 눌러주세요.');destination=audio.createMediaStreamDestination();}
  aborted(workSignal);
- // Preflight every file sequentially. Do not retain a whole notebook of decoders.
+ // Read only manifests first: reject oversized selections before any decryption.
+ for(let i=0;i<pages.length;i++){
+ onProgress({phase:'prepare',page:i+1,pages:pages.length});
+ for(const object of pages[i].videoObjects||[])if(object.provider==='local'){
+ const info=await mediaInfo(object,pages[i],{getMediaInfo,signal:workSignal});
+ totalBytes+=info.size;
+ if(totalBytes>VIDEO_EXPORT_LIMITS.bytes)throw Error('선택한 영상이 128MB를 넘습니다. 페이지 범위를 나누어 출력해주세요.');
+ sizes.set(object,info.size);
+ }
+ }
+ // Probe durations sequentially. Do not retain a whole notebook of decoders.
  for(let i=0;i<pages.length;i++){
  const durations=[];onProgress({phase:'prepare',page:i+1,pages:pages.length});
  for(const object of pages[i].videoObjects||[])if(object.provider==='local'){
- const entry=await loadVideo(object,pages[i],{getMediaBlob,signal:workSignal,doc});try{totalBytes+=entry.bytes;durations.push(entry.video.duration);if(totalBytes>VIDEO_EXPORT_LIMITS.bytes)throw Error('선택한 영상이 128MB를 넘습니다. 페이지 범위를 나누어 출력해주세요.');}finally{releaseVideo(entry);}
+ const entry=await loadVideo(object,pages[i],{getMediaBlob,getMediaInfo,expectedSize:sizes.get(object),signal:workSignal,doc});try{durations.push(entry.video.duration);}finally{releaseVideo(entry);}
  }
  timings.push(videoPageSeconds(durations,stillSeconds));
  if(timings.reduce((a,b)=>a+b,0)>VIDEO_EXPORT_LIMITS.seconds)throw Error('총 출력 시간이 10분을 넘습니다. 페이지 범위를 나누어주세요.');
@@ -94,7 +115,7 @@ export async function composeVideoPages(pages,{renderPage,getMediaBlob,includeAu
  // Remote providers remain static labeled placeholders; never attempt to read an iframe.
  base=await renderPage({...page,videoObjects:(page.videoObjects||[]).filter(v=>v.provider!=='local')},{scale:1,signal:workSignal});aborted(workSignal);
  for(const object of page.videoObjects||[])if(object.provider==='local'){
- const entry=await loadVideo(object,page,{getMediaBlob,signal:workSignal,doc});entries.push(entry);
+ const entry=await loadVideo(object,page,{getMediaBlob,getMediaInfo,expectedSize:sizes.get(object),signal:workSignal,doc});entries.push(entry);
  if(audio){entry.source=audio.createMediaElementSource(entry.video);entry.gain=audio.createGain();entry.gain.gain.value=1;entry.source.connect(entry.gain);entry.gain.connect(destination);}else entry.video.muted=true;
  }
  const draw=()=>{ctx.drawImage(base,0,0,900,1200);for(const {video,object}of entries){const b=object.bounds,r=containVideoRect(b,video.videoWidth,video.videoHeight);ctx.fillStyle='#000';ctx.fillRect(b.x,b.y,b.width,b.height);ctx.drawImage(video,r.x,r.y,r.width,r.height);}};
@@ -156,7 +177,7 @@ export async function composeVideoPages(pages,{renderPage,getMediaBlob,includeAu
 }
 
 /** Opens only from export menu. Caller owns current-notebook scope and edit flushing. */
-export function mountVideoExport({getPages,getCurrentId,renderPage,getMediaBlob,download,prepare=async()=>{},onBusyChange=()=>{},document:doc=globalThis.document}={}){
+export function mountVideoExport({getPages,getCurrentId,renderPage,getMediaBlob,getMediaInfo,download,prepare=async()=>{},onBusyChange=()=>{},document:doc=globalThis.document}={}){
  const make=(tag,text)=>{const el=doc.createElement(tag);if(text)el.textContent=text;return el;};
  const dialog=make('dialog'),heading=make('h2','페이지 범위 · 영상 출력'),hint=make('p','필기·글·사진과 기기 영상을 한 영상으로 만듭니다. YouTube는 재생되지 않고 링크 안내만 표시됩니다. 서버에 업로드하지 않습니다.'),warning=make('p','출력 파일에는 비밀번호가 걸리지 않습니다. 원래 영상 길이만큼 시간이 걸리며 앱을 계속 열어두세요. 최대 30페이지·10분·원본 합계 128MB입니다. 브라우저 지원에 따라 MP4 또는 WebM으로 저장되며, 지원하지 않는 기기에서는 출력할 수 없습니다.'),from=make('input'),to=make('input'),audio=make('input'),seconds=make('input'),status=make('p'),start=make('button','영상 만들기'),save=make('button','영상 파일 저장'),close=make('button','닫기');
  dialog.id='video-export-dialog';heading.id='video-export-heading';dialog.setAttribute('aria-labelledby',heading.id);status.setAttribute('role','status');status.setAttribute('aria-live','polite');
@@ -204,7 +225,7 @@ export function mountVideoExport({getPages,getCurrentId,renderPage,getMediaBlob,
  const prepared=prepare();if(prepared?.then)await prepared;
  const current=getPages();if(current.length!==snapshot.length||current.some((p,i)=>p.id!==snapshot[i].id))throw Error('페이지 목록이 바뀌었습니다. 창을 닫고 다시 선택해주세요.');
  const pages=structuredClone(selectVideoRange(current,Number(from.value),Number(to.value)));
- result=await composeVideoPages(pages,{renderPage,getMediaBlob,includeAudio:audio.checked,audioContext:primedAudio,videoOrder:structuredClone(videoOrder),stillSeconds:Number(seconds.value),signal:controller.signal,document:doc,onPlaybackBlocked:requestPlayback,onProgress:progress=>{status.textContent=progress.phase==='prepare'?`영상 확인 중 · ${progress.page}/${progress.pages}페이지`:`영상 만드는 중 · ${progress.page}/${progress.pages}페이지${progress.videos?' · 영상 '+progress.video+'/'+progress.videos:''} · ${Math.round(progress.elapsed)}/${Math.ceil(progress.total)}초`;}});
+ result=await composeVideoPages(pages,{renderPage,getMediaBlob,getMediaInfo,includeAudio:audio.checked,audioContext:primedAudio,videoOrder:structuredClone(videoOrder),stillSeconds:Number(seconds.value),signal:controller.signal,document:doc,onPlaybackBlocked:requestPlayback,onProgress:progress=>{status.textContent=progress.phase==='prepare'?`영상 확인 중 · ${progress.page}/${progress.pages}페이지`:`영상 만드는 중 · ${progress.page}/${progress.pages}페이지${progress.videos?' · 영상 '+progress.video+'/'+progress.videos:''} · ${Math.round(progress.elapsed)}/${Math.ceil(progress.total)}초`;}});
  aborted(controller.signal);status.textContent='영상 파일을 만들었습니다. 아래 저장 버튼을 누른 뒤 기기에 저장됐는지 확인해주세요.';save.hidden=false;
  }catch(error){discard();status.textContent=error.name==='NotAllowedError'?'브라우저가 영상 또는 소리 시작을 허용하지 않았습니다. 영상 만들기를 다시 누르거나, 소리 포함을 해제한 뒤 시도해주세요. 원본은 변경하지 않았습니다.':error.message||'영상 출력에 실패했습니다. 원본 노트와 영상은 변경하지 않았습니다.';}finally{if(primedAudio&&primedAudio.state!=='closed')await primedAudio.close().catch(()=>{});controller=null;setBusy(false);renderOrder();}};
  save.onclick=async()=>{if(!result||save.disabled)return;save.disabled=true;try{await download(result.blob,'노트-페이지-영상.'+result.extension);status.textContent='파일 저장 화면을 요청했습니다. 저장 위치를 선택하고 완료해주세요.';}catch(error){status.textContent=error.message||'파일 저장 요청에 실패했습니다. 다시 시도해주세요.';}finally{save.disabled=false;}};

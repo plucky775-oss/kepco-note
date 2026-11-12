@@ -1,0 +1,27 @@
+{
+  "version_name": "207.5",
+  "version_code": 207005,
+  "status": "source-only; no signed APK released",
+  "package": "kr.kepconote.standalone.v207",
+  "base_apk": "KEPCO-note-207.4.apk",
+  "base_sha256": "fb9771320add5b631de0d7d2920920c288d92f67f6bd5e8d314550cc3eb39d0a",
+  "signer_sha256_required": "8e3f7bf8d831c60cff0d35110288196bd878c6e078a680ed9b8a5128c8135fad",
+  "assets": {
+    "src/app.js": "e65d366e48b5044b6f15285516e93a9c5de516e20c7992ca46cc846079e9b858",
+    "src/backup-center.js": "7a9ad93bb6aa3255913ac8f1228ce24907b7707000b18275205c73924c9def28",
+    "src/backup-model.js": "6ed224fc6ff8f547389aadb79ba97358566cc3b42d13efa024994c8953071a9d",
+    "src/device-video-store.js": "878de4f8436987affab98fd9faaec6ec5242b1444302233d31aba9c26a6766f8",
+    "src/video-export.js": "26cad1afcea884bceda9c9f05f36280df2eb00358c0dc9454d517e86930fca0b",
+    "src/video-tools.js": "a29b7baeb7e4b0c2c7b36e862a34d231ff5b54eb66352d02d70360c15325def0",
+    "src/video-storage-manager.js": "c2a2f59a265db920df1e5e9723666ff0eda5d0fb6e7b8bb40f4a27140b680ccd"
+  },
+  "verification": {
+    "video_tests_passed": 109,
+    "other_regression_tests_passed": 278,
+    "javascript_syntax_checked": 94,
+    "static_relative_imports_resolved": true,
+    "native_dex_calendar_diary_insets_unchanged": true,
+    "signed_apk_created": false,
+    "real_android_device_tested": false
+  }
+}

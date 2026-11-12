@@ -38,3 +38,20 @@ test('navigation during save cleans unpublished asset without modifying either p
 test('missing device asset provides original file recovery rather than silent playback',async()=>{const h=harness({mediaStore:{readDeviceVideo:async()=>null}});h.note={...h.note,videoObjects:[{id:'saved',provider:'local',fileName:'demo.mp4',fileSize:4,lastModified:1,assetId:'asset-'+ '1'.repeat(24),assetKey:'A'.repeat(43),bounds:{x:90,y:180,width:480,height:270}}]};card(h).children[0].children[0].click();await new Promise(r=>setTimeout(r,0));assert.match(card(h).children[0].children[0].textContent,/저장본 없음/);card(h).children[0].children[0].click();assert.ok(card(h).querySelector('input'));});
 
 test('APK excludes X links',()=>{const h=harness();assert.equal(h.tools.insert('https://x.com/user/status/1234567'),false);assert.equal(h.note.videoObjects.length,0);});
+
+for(const mode of ['timestamp','replacement','decline'])test('relink '+mode+' requires consent and keeps placement and old asset',async()=>{
+ const h=harness(),file=Object.assign(new Blob(['test'],{type:'video/mp4'}),{name:'test.mp4',lastModified:1});
+ await h.tools.insertLocal(file);const before=structuredClone(h.note.videoObjects[0]);let prompts=[];
+ window.confirm=message=>{prompts.push(message);return mode!=='decline';};
+ const next=Object.assign(new Blob([mode==='replacement'?'new content':'test'],{type:'video/mp4'}),{name:mode==='replacement'?'other.mp4':'test.mp4',lastModified:2});
+ menu(h).children.find(c=>c.textContent==='원본 다시 선택 · 저장').click();const input=card(h).querySelector('input');input.files=[next];await input.onchange();
+ assert.equal(prompts.length,1);const after=h.note.videoObjects[0];
+ if(mode==='decline')assert.deepEqual(after,before);else{assert.equal(after.fileName,next.name);assert.equal(after.fileSize,next.size);assert.equal(after.lastModified,2);assert.notEqual(after.assetId,before.assetId);assert.deepEqual(after.bounds,before.bounds);h.undo();assert.deepEqual(h.note.videoObjects[0],before);card(h).children[0].children[0].click();await new Promise(r=>setTimeout(r,0));assert.equal(card(h).querySelector('video')?.tagName,'video');}
+});
+test('failed relink storage leaves original note reference intact',async()=>{
+ const h=harness({mediaStore:{saveDeviceVideo:async()=>{throw Error('quota');}}});
+ h.note={...h.note,videoObjects:[{id:'local1',provider:'local',fileName:'demo.mp4',fileSize:4,lastModified:1,bounds:{x:90,y:180,width:480,height:270}}]};const before=structuredClone(h.note);
+ window.confirm=()=>true;card(h).children[0].children[0].click();const input=card(h).querySelector('input');input.files=[{name:'other.mp4',type:'video/mp4',size:5,lastModified:2}];await input.onchange();assert.deepEqual(h.note,before);
+});
+
+test('video card cannot bypass reference-aware storage cleanup',async()=>{const h=harness();await h.tools.insertLocal({name:'demo.mp4',type:'video/mp4',size:3,lastModified:1});const labels=menu(h).children.map(e=>e.textContent||'');assert.ok(labels.some(t=>t.includes('영상 저장공간')));assert.ok(!labels.some(t=>t==='기기 저장본 삭제'));});
