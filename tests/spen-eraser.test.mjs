@@ -80,3 +80,20 @@ test('manual eraser stays selected; mouse right click and finger are unchanged',
  h.scope.tool='eraser';h.send('pointerdown',20,20,pen);h.send('pointermove',30,30,{...pen,buttons:3});h.send('pointermove',40,40,pen);assert.equal(h.scope.drawing.kind,'erase');h.send('pointerup',40,40,{...pen,pressure:0});assert.equal(h.scope.tool,'eraser');
 });
 test('pan lock rejects button erasing',()=>{const h=harness();h.element('pan-page').checked=true;h.send('pointerdown',20,20,{...pen,buttons:3});assert.equal(h.scope.drawing,null);});
+
+// Android's native adapter reports barrel strokes as TOOL_TYPE_ERASER, which
+// Chromium exposes as pen + buttons 32, including move-only contact recovery.
+test('native eraser move contact recovers with button -1 and returns to pen',()=>{
+ const h=harness();ink(h);const before=JSON.stringify(h.scope.note.strokes);
+ h.send('pointermove',80,100,{...pen,buttons:32,button:-1});
+ assert.equal(h.scope.drawing.kind,'erase');assert.notEqual(JSON.stringify(h.scope.note.strokes),before);
+ h.send('pointermove',90,100,{...pen,buttons:1,button:-1});
+ assert.equal(h.scope.drawing.kind,undefined);assert.equal(h.scope.drawing.points[0].x,90);
+ h.send('pointerup',100,100,{...pen,pressure:0});assert.equal(h.scope.tool,'pen');
+});
+test('move-only hover never starts erasure or ink',()=>{
+ const h=harness();h.send('pointermove',50,50,{...pen,buttons:0,button:-1,pressure:0});
+ assert.equal(h.scope.drawing,null);
+ h.send('pointermove',50,50,{...pen,buttons:2,button:-1,pressure:0});
+ assert.equal(h.scope.drawing,null);
+});

@@ -1,3 +1,4 @@
+import {mountVideoInsert} from './video-insert.js';
 import {mountVideoTools} from './video-tools.js';
 import {drawVideoPlaceholders} from './video-objects.js';
 import {mountVideoExport} from './video-export.js';
@@ -281,7 +282,7 @@ function pointerTool(e){return tool==='pen'&&stylusEraserPressed(e)?'eraser':too
 function moveInkPointer(e){
  if(!drawing){
   // Tip-down while the barrel button is already held may be pointermove.
-  if(stylusContact(e)&&(e.button===0||e.button===5)){beginInkPointer(e);return;}
+  if(stylusContact(e)){beginInkPointer(e,true);return;}
   if(tool==='eraser'&&e.pointerType!=='touch')showEraser(inputPoint(e,snapshotRect($('canvas').getBoundingClientRect())));else showEraser(null);
   return;
  }
@@ -607,10 +608,9 @@ $('android-legacy-recordings').onclick=()=>meetingDialog.open();
 // Native host waits for a positive durable-save result before leaving.
 window.__moaBeforeExit=async()=>{if(recognizing||fontBusy||switching||documentBusy||meetingDialog?.recording)return false;stopAuto();endStroke();commitText();const saved=await flush();return saved!==false&&dirtyNotes.size===0;};
 
-// Local video only. Native CSP and bridge intentionally continue to reject remote frames.
+// Links and local videos share one menu. Remote frames remain isolated from native bridges.
 videoTools=mountVideoTools({saveNote:()=>flush(),host:document.querySelector('.editor-chrome'),sharedSelection:true,onDone:()=>$('pen').onclick(),page:$('page'),canvas:$('canvas'),getNote:()=>note,makeId:id,toast,canInteract:()=>!!note&&!switching&&!drawing&&!documentBusy,beforeGesture:()=>{endStroke();clearSelection();photoTools?.deactivate();drawingTools?.deactivate();pageSwipe?.cancel();},apply:(next,message)=>{if(!note||next.id!==note.id)return false;const validated=validateNote(next);history.push(note);note=validated;dirty();render();if(message)toast(message);return true;}});
-const localVideoButton=document.createElement('button');localVideoButton.type='button';localVideoButton.id='insert-local-video';localVideoButton.textContent='기기 영상 넣기';$('insert-photo').after(localVideoButton);
-localVideoButton.onclick=()=>{if(documentBusy||switching)return;endStroke();editorMenus?.close();const requestedPage=note?.id,input=document.createElement('input');input.type='file';input.accept='video/*';input.hidden=true;document.body.append(input);input.onchange=async()=>{const file=input.files?.[0];input.remove();if(!file||note?.id!==requestedPage)return;$('select').onclick();await videoTools.insertLocal(file);};input.oncancel=()=>input.remove();input.click();};
+mountVideoInsert({anchor:$('insert-photo'),beforeOpen:()=>{endStroke();editorMenus?.close();},canInteract:()=>!!note&&!documentBusy&&!switching,getPageId:()=>note?.id,insert:url=>videoTools.insert(url),insertLocal:file=>videoTools.insertLocal(file),onSelect:()=>$('select').onclick(),toast});
 for(const key of ['pen','eraser','select','open-handwriting','keyboard-text','edit-text','open-pen','pan-page','open-drawing'])$(key).addEventListener('click',()=>{if(key==='select')videoTools.arm();else videoTools.deselect();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){videoTools.suspend(true);videoExporter?.cancel();}else videoTools.render();});
 videoExporter=mountVideoExport({getPages:()=>pagesFor(notes,notebookId(note)),getCurrentId:()=>note?.id,renderPage:renderPageCanvas,download,onBusyChange:busy=>{documentBusy=busy;},prepare:async()=>{if(!note||switching)throw Error('노트를 먼저 열어주세요.');endStroke();commitText();stopAuto();videoTools.suspend();if(await flush()===false||dirtyNotes.size)throw Error('노트를 저장하지 못했습니다. 저장 상태를 확인해주세요.');},getMediaInfo:(video,page,{signal}={})=>getDeviceVideoInfo(video,{isAllowed:()=>!signal?.aborted&&!document.hidden&&!switching&&!!note&&notebookId(note)===notebookId(page)&&notes.some(p=>p.id===page.id&&p.videoObjects?.some(v=>v.id===video.id&&v.assetId===video.assetId&&v.assetKey===video.assetKey))}),getMediaBlob:(video,page,{signal,maxBytes}={})=>{const book=notebookId(note),allowed=()=>!signal?.aborted&&!document.hidden&&!switching&&!!note&&notebookId(note)===book&&notebookId(page)===book&&notes.some(p=>p.id===page.id&&p.videoObjects?.some(v=>v.id===video.id&&v.assetId===video.assetId&&v.assetKey===video.assetKey));return readDeviceVideo(video,{isAllowed:allowed,maxBytes});}});
