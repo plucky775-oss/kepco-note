@@ -7,7 +7,7 @@
   "base_sha256": "fb9771320add5b631de0d7d2920920c288d92f67f6bd5e8d314550cc3eb39d0a",
   "signer_sha256_required": "8e3f7bf8d831c60cff0d35110288196bd878c6e078a680ed9b8a5128c8135fad",
   "assets": {
-    "src/app.js": "e65d366e48b5044b6f15285516e93a9c5de516e20c7992ca46cc846079e9b858",
+    "src/app.js": "871a94db24ac0fe8415b5a80a763521166ef0e0e5734264f587ee1dd4d5876ae",
     "src/backup-center.js": "7a9ad93bb6aa3255913ac8f1228ce24907b7707000b18275205c73924c9def28",
     "src/backup-model.js": "6ed224fc6ff8f547389aadb79ba97358566cc3b42d13efa024994c8953071a9d",
     "src/device-video-store.js": "878de4f8436987affab98fd9faaec6ec5242b1444302233d31aba9c26a6766f8",
@@ -17,11 +17,12 @@
   },
   "verification": {
     "video_tests_passed": 109,
-    "other_regression_tests_passed": 278,
+    "other_regression_tests_passed": 284,
     "javascript_syntax_checked": 94,
     "static_relative_imports_resolved": true,
     "native_dex_calendar_diary_insets_unchanged": true,
     "signed_apk_created": false,
-    "real_android_device_tested": false
+    "real_android_device_tested": false,
+    "spen_regression_tests_passed": 6
   }
 }
