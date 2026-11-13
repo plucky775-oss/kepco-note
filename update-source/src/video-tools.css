@@ -29,3 +29,6 @@
 .note-video-consent{box-sizing:border-box;width:100%;height:100%;overflow:auto;padding:12px;font-size:13px;line-height:1.5;background:#172437}
 .note-video-consent p{margin:0 0 8px}.note-video-consent a{color:#cfe2ff;display:block;padding:8px;font-size:12px}
 .note-video-consent button{background:#304b71;margin:4px}
+
+/* A playback tap can land anywhere in the saved video rectangle. */
+.note-video-play{width:100%;height:100%;cursor:pointer}

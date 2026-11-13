@@ -277,12 +277,13 @@ function endStroke(commitMove=false,discardInk=false){flushEraserRender();cancel
 // Per-contact S Pen barrel button (secondary bit 2) / eraser end (bit 32).
 // Never change the toolbar tool or saved pen settings for a temporary eraser.
 function stylusEraserPressed(e){return e.pointerType==='pen'&&((e.buttons&34)!==0||e.button===5);}
-function stylusContact(e){return e.pointerType==='pen'&&((e.buttons&33)!==0||e.pressure>0);}
+// A button is not tip contact: Samsung reports barrel/eraser flags during hover.
+function stylusContact(e){return e.pointerType==='pen'&&e.pressure>0&&(e.type!=='pointerup'&&e.type!=='pointercancel');}
 function pointerTool(e){return tool==='pen'&&stylusEraserPressed(e)?'eraser':tool;}
 function moveInkPointer(e){
  if(!drawing){
   // Tip-down while the barrel button is already held may be pointermove.
-  if(stylusContact(e)){beginInkPointer(e,true);return;}
+  if(stylusContact(e)&&stylusEraserPressed(e)){beginInkPointer(e,true);return;}
   if(tool==='eraser'&&e.pointerType!=='touch')showEraser(inputPoint(e,snapshotRect($('canvas').getBoundingClientRect())));else showEraser(null);
   return;
  }
@@ -290,7 +291,8 @@ function moveInkPointer(e){
  e.preventDefault();
  if(e.pointerType==='pen'&&drawing.pointerType==='pen'){
   if(!stylusContact(e)){endStroke(true);showEraser(null);return;}
-  if((drawing.kind==='erase')!==(pointerTool(e)==='eraser')){
+  // Keep erasure latched until tip-up, even if the barrel is released first.
+  if(drawing.kind!=='erase'&&pointerTool(e)==='eraser'){
    // Commit before switching; never connect ink across the erased interval.
    endStroke(true);showEraser(null);beginInkPointer(e,true);return;
   }

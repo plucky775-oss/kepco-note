@@ -1,0 +1,16 @@
+{
+  "version_name": "307.7",
+  "version_code": 307007,
+  "package": "kr.kepconote.standalone.v307",
+  "apk_sha256": "b7d76743632dc019bfd0fcd2e6cbdb401640ed2cc2ec2281bd189b946bcd0362",
+  "signer_sha256": "53ce34dba5ca028ec41e737c7c398e473c24d1ad2dad0f6df50e6b74b666dd51",
+  "regression_tests": 414,
+  "native_checks": 41,
+  "javascript_syntax_checks": 96,
+  "device_verified": false,
+  "assets": {
+    "src/app.js": "86d6df80f3981a8326a94b974010974029197ea58ce4e7952dbfc8314e6993a8",
+    "src/video-tools.js": "56c0781a9e41d4b8c2143121bd924ae12acc413d9fa12e36a0b3f6324e5cfd5a",
+    "src/video-tools.css": "3d503e62f6abd6af21ca64fa43caaa3e33522f9796eb0cdf21c39f135993aef0"
+  }
+}

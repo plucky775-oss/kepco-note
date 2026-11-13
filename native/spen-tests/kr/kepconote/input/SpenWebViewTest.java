@@ -26,6 +26,17 @@ public final class SpenWebViewTest {
   a=SpenWebView.adapt(hist);check(a.getHistorySize()==2,"history count");check(a.getHistoricalEventTime(0)==1005&&a.getHistoricalEventTime(1)==1010&&a.time==1015,"history timing");check(a.samples.get(0)[0].x==100&&a.samples.get(1)[0].x==110&&a.coords[0].x==120,"history coordinates");check(a.coords[0].pressure==.9f,"current pressure");
   SpenWebView view=new SpenWebView(new Context());check(view.onTouchEvent(hist),"dispatch result");check(WebView.last.recycled&&!hist.recycled,"recycles only clone");
   WebView.fail=true;try{view.onTouchEvent(hist);}catch(RuntimeException expected){}check(WebView.last.recycled,"exception recycle");
+  WebView.fail=false;
+  MotionEvent down=sample(32,2);down.action=0;view.onTouchEvent(down);
+  check(WebView.last.getToolType(0)==4,"barrel tip-down eraser");
+  MotionEvent release=sample(0,2);view.onTouchEvent(release);
+  check(WebView.last.getToolType(0)==4,"barrel release contact remains eraser");
+  release.action=1;release.coords[0].pressure=0;view.onTouchEvent(release);
+  check(WebView.last.getToolType(0)==4,"lift has same tool identity");
+  MotionEvent next=sample(0,2);next.action=0;view.onTouchEvent(next);
+  check(WebView.last==next&&next.getToolType(0)==2,"next fresh stroke pen");
+  down.action=0;view.onTouchEvent(down);release.action=3;view.onTouchEvent(release);next.action=2;view.onTouchEvent(next);
+  check(WebView.last==next,"cancel clears eraser latch");
   System.out.println("S Pen native adapter: "+checks+" host checks passed (not Android device verification).");
  }
 }

@@ -1,0 +1,7 @@
+{
+  "original_class_count": 5686,
+  "added_class_count": 6,
+  "input_dex_sha256": "5d00900e7479cecc829769446658f5602008e7fa620a9aa9ac0d138d99c2b1f5",
+  "output_dex_sha256": "616cd9f34e99ed5cecbac9ead340426150b6e349600ae7b5c5e6d6527e6088ca",
+  "original_classes_preserved_except_webview_constructor": true
+}

@@ -55,11 +55,11 @@ test('barrel eraser preserves toolbar and pen settings, changes ink with one und
  assert.notEqual(JSON.stringify(h.scope.note.strokes),before);assert.equal(h.scope.history.past.length,2);
  ink(h,200);assert.equal(h.scope.note.strokes.at(-1).color,'#223247');assert.equal(h.scope.note.strokes.at(-1).width,3);
 });
-test('mid-contact press/release separates ink segments without connecting through erasure',()=>{
+test('mid-contact barrel release remains eraser until lift without new ink',()=>{
  const h=harness();h.send('pointerdown',20,100,pen);h.send('pointermove',60,100,pen);
  h.send('pointermove',80,100,{...pen,buttons:3,button:2});assert.equal(h.scope.drawing.kind,'erase');
- h.send('pointermove',120,100,{...pen,buttons:1,button:2});assert.equal(h.scope.drawing.kind,undefined);assert.equal(h.scope.drawing.points[0].x,120);
- h.send('pointerup',160,100,{...pen,pressure:0});assert.equal(h.scope.note.strokes.at(-1).points[0].x,120);
+ h.send('pointermove',120,100,{...pen,buttons:1,button:2});assert.equal(h.scope.drawing.kind,'erase');
+ h.send('pointerup',160,100,{...pen,pressure:0});assert.equal(h.scope.drawing,null);assert.equal(h.scope.note.strokes.length,1);
 });
 test('held barrel hover is harmless and tip-down/up pointermove works',()=>{
  const h=harness();ink(h);const before=JSON.stringify(h.scope.note.strokes);
@@ -83,12 +83,12 @@ test('pan lock rejects button erasing',()=>{const h=harness();h.element('pan-pag
 
 // Android's native adapter reports barrel strokes as TOOL_TYPE_ERASER, which
 // Chromium exposes as pen + buttons 32, including move-only contact recovery.
-test('native eraser move contact recovers with button -1 and returns to pen',()=>{
+test('native eraser move contact recovers and waits for next contact to ink',()=>{
  const h=harness();ink(h);const before=JSON.stringify(h.scope.note.strokes);
  h.send('pointermove',80,100,{...pen,buttons:32,button:-1});
  assert.equal(h.scope.drawing.kind,'erase');assert.notEqual(JSON.stringify(h.scope.note.strokes),before);
  h.send('pointermove',90,100,{...pen,buttons:1,button:-1});
- assert.equal(h.scope.drawing.kind,undefined);assert.equal(h.scope.drawing.points[0].x,90);
+ assert.equal(h.scope.drawing.kind,'erase');
  h.send('pointerup',100,100,{...pen,pressure:0});assert.equal(h.scope.tool,'pen');
 });
 test('move-only hover never starts erasure or ink',()=>{
@@ -96,4 +96,26 @@ test('move-only hover never starts erasure or ink',()=>{
  assert.equal(h.scope.drawing,null);
  h.send('pointermove',50,50,{...pen,buttons:2,button:-1,pressure:0});
  assert.equal(h.scope.drawing,null);
+});
+
+test('zero-pressure eraser/contact flags never draw or erase during hover',()=>{
+ const h=harness();ink(h);const before=JSON.stringify(h.scope.note.strokes);
+ for(const buttons of [0,1,2,3,32,33,34]) {
+  for(const type of ['pointerdown','pointermove'])h.send(type,80,100,{...pen,buttons,button:buttons===32?5:-1,pressure:0});
+  assert.equal(h.scope.drawing,null);assert.equal(JSON.stringify(h.scope.note.strokes),before);
+ }
+});
+test('erase lift and button release never commit a ghost stroke',()=>{
+ const h=harness();ink(h);h.element('eraser-size').value='80';
+ h.send('pointerdown',80,100,{...pen,buttons:32,button:5});
+ h.send('pointermove',90,100,{...pen,buttons:1,pressure:0});
+ assert.equal(h.scope.drawing,null);const before=JSON.stringify(h.scope.note.strokes);
+ h.send('pointermove',110,100,{...pen,buttons:1,pressure:0});
+ h.send('pointerdown',110,100,{...pen,buttons:1,pressure:0});
+ h.send('pointerup',110,100,{...pen,pressure:0});
+ assert.equal(JSON.stringify(h.scope.note.strokes),before);
+ ink(h,300);assert.equal(h.scope.note.strokes.at(-1).points[0].y,300);
+});
+test('idle pen move cannot begin a new stroke from stray pressure',()=>{
+ const h=harness();h.send('pointermove',50,50,{...pen,buttons:1});assert.equal(h.scope.drawing,null);
 });

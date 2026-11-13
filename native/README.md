@@ -16,8 +16,11 @@ to `TOOL_TYPE_ERASER` and removes those two button flags **before** passing the
 copied event into WebView. Chromium exposes this as a pen pointer with eraser
 button bit 32. Other pointers, IDs, pressure, orientation, timing, historical
 samples and metadata are retained. Original `MotionEvent` objects are never
-mutated or recycled by the adapter. Releasing the button passes ordinary pen
-input through again; existing JS splits the stroke at each tool transition.
+mutated or recycled by the adapter. Once barrel erasing starts, the native eraser tool identity stays latched through
+UP/CANCEL even if the button is released before lift-off. The next new contact
+returns to the normal pen. JS requires positive tip pressure and never starts
+ordinary ink from an idle move event; zero-pressure button/hover events cannot
+start a stroke. This avoids Chromium synthesizing a pen down at eraser release.
 
 - [Chromium native stylus selection](https://chromium.googlesource.com/chromium/src/+/HEAD/content/browser/renderer_host/input/stylus_text_selector.cc)
 - [Chromium eraser-to-pointer mapping](https://chromium.googlesource.com/chromium/src/+/HEAD/third_party/blink/renderer/core/events/pointer_event_factory.cc)

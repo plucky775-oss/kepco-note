@@ -55,3 +55,23 @@ test('failed relink storage leaves original note reference intact',async()=>{
 });
 
 test('video card cannot bypass reference-aware storage cleanup',async()=>{const h=harness();await h.tools.insertLocal({name:'demo.mp4',type:'video/mp4',size:3,lastModified:1});const labels=menu(h).children.map(e=>e.textContent||'');assert.ok(labels.some(t=>t.includes('영상 저장공간')));assert.ok(!labels.some(t=>t==='기기 저장본 삭제'));});
+
+for(const nativeTouch of [false,true])test(`selected video screen tap plays without moving (${nativeTouch?'touch':'pointer'})`,()=>{
+ const h=harness({nativeTouch});h.tools.insert(url);const c=card(h),selector=c.children[1],before=structuredClone(h.note),count=h.changes.length;
+ if(nativeTouch){send(selector,'touchstart',touch([finger(1,200,300)]));send(h.doc,'touchend',touch([],[finger(1,203,302)]));}
+ else{selector.onpointerdown(evt(200,300));send(h.doc,'pointerup',evt(203,302));}
+ assert.equal(c.children[0].children[0].tagName,'iframe');assert.equal(h.tools.isEditing(),false);assert.deepEqual(h.note,before);assert.equal(h.changes.length,count);
+ selector.click();assert.equal(h.tools.isEditing(),false,'compatibility click must not reselect the playing video');
+});
+test('first selection tap selects and subsequent screen drag never plays',()=>{
+ const h=harness();h.tools.insert(url);h.tools.arm();const selector=card(h).children[1];
+ selector.onpointerdown(evt(200,300));send(h.doc,'pointerup',evt(200,300));selector.click();assert.equal(card(h).dataset.selected,'true');assert.equal(card(h).children[0].children[0].tagName,'button');
+ selector.onpointerdown(evt(200,300));send(h.doc,'pointermove',evt(240,300));send(h.doc,'pointerup',evt(200,300));selector.click();assert.equal(card(h).children[0].children[0].tagName,'button','drag returning to its origin is not a tap');
+});
+test('local screen tap starts and resumes playback while native control strip remains untouched',async()=>{
+ const h=harness(),file=Object.assign(new Blob(['test'],{type:'video/mp4'}),{name:'test.mp4',lastModified:1});let calls=0;const create=document.createElement;
+ document.createElement=tag=>{const el=create(tag);if(tag==='video'){el.paused=true;el.play=()=>{calls++;el.paused=false;return Promise.resolve();};el.pause=()=>{el.paused=true;};}return el;};
+ await h.tools.insertLocal(file);const selector=card(h).children[1];selector.onpointerdown(evt(200,300));send(h.doc,'pointerup',evt(200,300));const video=card(h).querySelector('video');assert.equal(calls,1);assert.equal(video.paused,false);
+ video.onclick({clientY:300});assert.equal(video.paused,true);video.onclick({clientY:300});assert.equal(calls,2);video.onclick({clientY:1190});assert.equal(video.paused,false);
+ h.tools.activate();video.onclick({clientY:300});assert.equal(video.paused,false);controls(h).children[1].click();assert.equal(calls,3);h.tools.suspend();
+});
