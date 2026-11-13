@@ -1,0 +1,45 @@
+{
+  "version_name": "307.5",
+  "version_code": 307005,
+  "package": "kr.kepconote.standalone.v307",
+  "label": "KEPCO S펜",
+  "apk_sha256": "7c560c9689325bcf99f8f77a17757cca8b91aee20a64058a520dde79b024d3b7",
+  "base_sha256": "fb9771320add5b631de0d7d2920920c288d92f67f6bd5e8d314550cc3eb39d0a",
+  "signer_sha256": "53ce34dba5ca028ec41e737c7c398e473c24d1ad2dad0f6df50e6b74b666dd51",
+  "signer_sha1": "e80b5b4e6d67a7eb8b30dc4205383da6fb4b760c",
+  "source_commit": "1bf54a4067a6934e9301c717c50a9ec92ae8a616",
+  "assets": {
+    "src/app.js": "871a94db24ac0fe8415b5a80a763521166ef0e0e5734264f587ee1dd4d5876ae",
+    "src/backup-center.js": "7a9ad93bb6aa3255913ac8f1228ce24907b7707000b18275205c73924c9def28",
+    "src/backup-model.js": "6ed224fc6ff8f547389aadb79ba97358566cc3b42d13efa024994c8953071a9d",
+    "src/device-video-store.js": "878de4f8436987affab98fd9faaec6ec5242b1444302233d31aba9c26a6766f8",
+    "src/video-export.js": "26cad1afcea884bceda9c9f05f36280df2eb00358c0dc9454d517e86930fca0b",
+    "src/video-tools.js": "a29b7baeb7e4b0c2c7b36e862a34d231ff5b54eb66352d02d70360c15325def0",
+    "src/video-storage-manager.js": "c2a2f59a265db920df1e5e9723666ff0eda5d0fb6e7b8bb40f4a27140b680ccd"
+  },
+  "changed_entries": [
+    "AndroidManifest.xml",
+    "resources.arsc",
+    "assets/www/src/app-update.js",
+    "assets/www/src/app.js",
+    "assets/www/src/backup-center.js",
+    "assets/www/src/backup-model.js",
+    "assets/www/version.json",
+    "assets/www/src/video-export.js",
+    "assets/www/src/device-video-store.js",
+    "assets/www/src/video-tools.js",
+    "META-INF/MANIFEST.MF"
+  ],
+  "verification": {
+    "signature_v2_v3": true,
+    "zipalign_16kb": true,
+    "native_dex_unchanged": true,
+    "source_tests_passed": 393,
+    "real_device_tested": false
+  },
+  "limitations": [
+    "Separate app storage; no automatic migration of existing notes.",
+    "Google sign-in/calendar may require registering new package and signing certificate.",
+    "No real-device S Pen test."
+  ]
+}

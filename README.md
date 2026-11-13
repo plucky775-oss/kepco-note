@@ -2,6 +2,12 @@
 
 첨부 Android 앱 `kepco-note-v100-standalone(6).apk`를 기준으로 하는 업데이트 소스입니다. 웹앱 저장소와 분리하여 관리하며 웹 배포는 수행하지 않습니다.
 
+## 307.5 별도 설치 S Pen 앱
+
+S Pen 변경을 포함한 **KEPCO S펜** APK를 새 키로 서명했습니다. 앱 ID는 `kr.kepconote.standalone.v307`이며 기존 207 앱을 덮어쓰지 않는 별도 설치판입니다. 기존 앱과 저장공간이 분리되므로 기존 노트는 자동으로 옮겨지지 않습니다. 기존 앱을 삭제하지 마세요. JSON 백업에는 동영상 원본이 포함되지 않습니다.
+
+APK v2/v3 서명·16 KiB ZIP 정렬·패키지 및 provider/권한 분리·기존 네이티브 DEX 보존을 검사했습니다. 실제 Galaxy 설치·S Pen 입력·Google 캘린더 로그인은 아직 검증하지 않았습니다. Google OAuth는 새 패키지와 서명 등록이 필요할 수 있습니다. APK와 비공개 서명 백업은 저장소에 올리지 않습니다. 공개 빌드 스크립트는 `build_spen_parallel.py`, 검증 정보는 `releases/307.5/release-info.json`입니다.
+
 ## Galaxy Tab S8+ S Pen 버튼 지우개 (2026-11-13)
 
 - 필기 중 S Pen 옆 버튼을 누르고 화면에 쓰면 기존 부분 지우개로 동작합니다. 버튼을 놓으면 선택했던 펜 종류·굵기·색상으로 돌아갑니다.
