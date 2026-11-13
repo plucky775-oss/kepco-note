@@ -1,0 +1,19 @@
+{
+  "version_name": "307.8",
+  "version_code": 307008,
+  "package": "kr.kepconote.standalone.v307",
+  "apk_sha256": "023657cb9e88c7a916a75d9145ad5c669052ba5be0400b2a45622663227fd562",
+  "signer_sha256": "53ce34dba5ca028ec41e737c7c398e473c24d1ad2dad0f6df50e6b74b666dd51",
+  "regression_tests": 417,
+  "javascript_syntax_checks": 99,
+  "device_verified": false,
+  "native_dex_identical_to": "307.7",
+  "changed_entries": [
+    "AndroidManifest.xml",
+    "assets/www/index.html",
+    "assets/www/src/app-update.js",
+    "assets/www/src/notebook-editor.js",
+    "assets/www/src/styles.css",
+    "assets/www/version.json"
+  ]
+}

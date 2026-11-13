@@ -3,7 +3,35 @@ import {COVER_PICKER_PRESETS,COVER_CATEGORIES,normalizeCover,normalizeBinding,no
 /** Dialog owns drafts only: cancellation never calls persist. */
 export function mountNotebookEditor({persist}){
  const $=id=>document.getElementById(id),dialog=$('notebook-dialog');let pending=null,busy=false,cover='art-01',paper='ruled',category='all',binding='bound',coverTitleSize=100;
- function renderPaper(){const chalkboard=$('new-paper-theme').value==='chalkboard';$('new-paper-hint').textContent=chalkboard?'초록 칠판은 줄 없는 속지로 만들어집니다.':'새 페이지는 현재 페이지의 속지 종류와 색상을 이어받습니다.';$('new-paper-types').replaceChildren(...PAPER_TYPES.map(({id,label})=>{const button=document.createElement('button');button.type='button';button.className='new-paper-choice';button.setAttribute('data-new-paper-type',id);button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(id===(chalkboard?'plain':paper)));button.disabled=busy||chalkboard;const preview=document.createElement('span');preview.className='new-paper-preview';preview.setAttribute('aria-hidden','true');preview.innerHTML=paperBackgroundSvg({paper:id,paperTheme:normalizePaperTheme($('new-paper-theme').value)});const name=document.createElement('span');name.textContent=label;button.append(preview,name);button.onclick=()=>{if(!busy&&!chalkboard){paper=id;renderPaper();[...$('new-paper-types').children].find(b=>b.getAttribute('data-new-paper-type')===id)?.focus();}};return button;}));}
+ // Preview-only styling: persisted paper IDs, colors and page geometry remain unchanged.
+ const paperFamilies=[...new Map(PAPER_THEMES.map(theme=>[theme.family,theme])).values()];
+ const variants=[['minimal','미니멀'],['frame','프레임'],['corner','코너']];
+ function chooseTheme(theme){if(busy)return;$('new-paper-theme').value=theme;renderPaper();}
+ function renderPaperColors(theme){
+  $('new-paper-colors').replaceChildren(...paperFamilies.map(family=>{
+   const button=document.createElement('button');button.type='button';button.className='new-paper-color';button.disabled=busy;
+   button.setAttribute('data-paper-family',family.family);button.setAttribute('aria-pressed',String(theme.family===family.family));
+   const label=family.label.split(' · ')[0];button.setAttribute('aria-label',label);
+   const chip=document.createElement('span');chip.className='new-paper-color-chip';chip.style.backgroundColor=family.color;chip.setAttribute('aria-hidden','true');
+   const check=document.createElement('span');check.className='paper-choice-check';check.textContent='✓';chip.append(check);
+   const name=document.createElement('span');name.textContent=label;button.append(chip,name);
+   button.onclick=()=>{const variant=variants.find(([id])=>theme.id.endsWith('-'+id))?.[0]||'minimal';chooseTheme(PAPER_THEMES.find(t=>t.id===family.family+'-'+variant)?.id||family.id);[...$('new-paper-colors').children].find(b=>b.getAttribute('data-paper-family')===family.family)?.focus();};return button;
+  }));
+  const decorated=theme.id!=='white'&&theme.id!=='chalkboard';$('new-paper-decoration').hidden=!decorated;
+  $('new-paper-variants').replaceChildren(...variants.map(([id,label])=>{const b=document.createElement('button');b.type='button';b.className='new-paper-variant';b.textContent=label;b.disabled=busy;b.setAttribute('data-paper-variant',id);b.setAttribute('aria-pressed',String(theme.id.endsWith('-'+id)));b.onclick=()=>{if(!decorated||busy)return;chooseTheme(theme.family+'-'+id);[...$('new-paper-variants').children].find(v=>v.getAttribute('data-paper-variant')===id)?.focus();};return b;}));
+ }
+ function renderPaper(){
+  const theme=PAPER_THEMES.find(t=>t.id===normalizePaperTheme($('new-paper-theme').value)),chalkboard=theme.id==='chalkboard',selected=chalkboard?'plain':paper;
+  $('new-paper-hint').textContent=chalkboard?'초록 칠판은 줄 없는 속지로 만들어집니다.':'견본의 선은 구분하기 쉽게 강조했습니다. 실제 속지의 선은 은은하게 유지됩니다.';
+  $('new-paper-selection').textContent=PAPER_TYPES.find(t=>t.id===selected).label+' · '+theme.label;
+  renderPaperColors(theme);
+  $('new-paper-types').replaceChildren(...PAPER_TYPES.map(({id,label})=>{
+   const button=document.createElement('button');button.type='button';button.className='new-paper-choice';button.setAttribute('data-new-paper-type',id);button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(id===selected));button.disabled=busy||chalkboard;
+   const preview=document.createElement('span');preview.className='new-paper-preview';preview.setAttribute('aria-hidden','true');preview.innerHTML=paperBackgroundSvg({paper:id,paperTheme:theme.id,binding}).replace('<svg ','<svg preserveAspectRatio="none" ');
+   const check=document.createElement('span');check.className='paper-choice-check';check.setAttribute('aria-hidden','true');check.textContent='✓';preview.append(check);
+   const name=document.createElement('span');name.textContent=label;button.append(preview,name);button.onclick=()=>{if(!busy&&!chalkboard){paper=id;renderPaper();[...$('new-paper-types').children].find(b=>b.getAttribute('data-new-paper-type')===id)?.focus();}};return button;
+  }));
+ }
  $('new-paper-theme').onchange=renderPaper;
  function renderTitle(){
   const title=$('notebook-name').value.trim()||'노트 이름';

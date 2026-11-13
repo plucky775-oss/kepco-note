@@ -133,3 +133,34 @@ python verify_update.py 'kepco-note-v100-standalone(6).apk'
 
 그림·글꼴·PDF 라이브러리의 기존 출처와 라이선스를 보존합니다. 추가 명화 출처는 `update-source/licenses/masterpiece-covers.txt`에 있습니다.
 
+
+## 307.8: visible paper sampler
+
+The creation dialog now shows twelve larger paper previews, fourteen labeled
+color chips, decoration variants, and an explicit selected paper/color label.
+Changing a color refreshes all previews immediately. Preview-only line/dot
+contrast does not change the saved paper background or geometry. All 38 theme
+IDs, the 55 Android cover choices, and existing notebook data remain intact.
+
+Build the unsigned asset-only update from the exact signed 307.7 APK:
+
+```sh
+python3 build_3078.py /private/KEPCO-Spen-307.7.apk /tmp/307.8-unsigned.apk
+```
+
+ZIP-align and sign with the existing private 307-series key outside this repo.
+Package `kr.kepconote.standalone.v307`, version code `307008`. No native DEX
+changes. Release evidence is in `releases/307.8-paper-picker.json`.
+
+To run the complete regression suite, extract `assets/www/` from the base APK
+into `work/www/`, overlay `update-source/`, copy `tests/upstream/*.test.mjs` to
+`work/www/tests/`, then run:
+
+```sh
+cd work/www
+node --test ../../tests/*.test.mjs tests/*.test.mjs ../../tests/video/*.test.mjs
+```
+
+417 tests and 99 JavaScript syntax checks passed. APK signature and alignment
+verified. Physical Galaxy Tab testing remains required; host tests are not a
+claim of device validation. Private signing files must never enter this repo.
